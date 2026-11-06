@@ -1691,8 +1691,11 @@ function settle(force){
   // реверсор переводится сжатым воздухом: нужно не меньше 3,5 атм
   if(S.relay["ВПЕРЁД"]&&S.revPos!=="F"){if(S.press>=3.5){S.revPos="F";ch=true;}else S.revNoAir=true;}
   if(S.relay["НАЗАД"]&&S.revPos!=="B"){if(S.press>=3.5){S.revPos="B";ch=true;}else S.revNoAir=true;}
-  if(S.env["Перегрузка"]&&!S.rp){S.rp=true;ch=true;}
-  if(S.relay["Возврат РП"]&&!S.env["Перегрузка"]&&S.rp){S.rp=false;ch=true;}
+  // «Перегрузка (РП)» — неисправность: РП срабатывает, как только по силовой цепи пошёл ток;
+  // катушка «Возврат РП» (питается только при КВ на «0») возвращает РП, когда тока нет
+  var irp=Math.max(curI("РП1-3"),curI("РП2-4"));
+  if(S.env["Перегрузка"]&&!S.rp&&irp>5){S.rp=true;ch=true;}
+  if(S.relay["Возврат РП"]&&S.rp&&irp<5){S.rp=false;ch=true;}
   if(!ch&&!any)break;
   if(!ch)break;
  }
@@ -2013,7 +2016,7 @@ function infoFor(e){
   if(e.k==="dr")h+="<div class='c-n'>Нажимай на названия позиций над барабаном, чтобы переключать контроллер.</div>";
   if(e.k==="sw"||e.k==="bt")h+="<div class='c-n'>Нажатие по элементу на схеме переключает его.</div>";
   if(rn&&COILS[rn])h+="<hr style='border:0;border-top:1px solid #2f384a'>"+coilInfo(rn);
-  else if(rn)h+="<div class='c-n'>"+(rn==="РН"||rn==="РН2"?"Реле напряжения: включено, когда есть напряжение в контактной сети.":rn==="РП"?"Реле перегрузки (защёлка). Сбрасывается катушкой «Возврат РП».":rn==="АК"?"Регулятор давления АК-11Б: при 6 атм размыкается (компрессор выключается), при 4 атм замыкается снова. Сейчас "+S.press.toFixed(1).replace(".",",")+" атм.":rn==="СП"?"Тепловое реле указателей поворота: прерывает ток — лампы и ЛС5 мигают, пока В46 стоит «налево» или «направо».":rn==="РСП"?"Промежуточное реле: включается при повороте направо и переводит мигание на правые лампы.":rn==="КВ"?"Концевые выключатели дверей: замкнуты, когда двери открыты.":"Реле токовой цепи — в модели не моделируется.")+"</div>";
+  else if(rn)h+="<div class='c-n'>"+(rn==="РН"||rn==="РН2"?"Реле напряжения: включено, когда есть напряжение в контактной сети.":rn==="РП"?"Реле перегрузки: при токе больше 400 А срабатывает и остаётся включённым (защёлка), размыкая цепь катушек ЛК. Вернуть: КВ на «0» и кнопка «Возврат РП». Переключатель «Перегрузка (РП)» имитирует неисправность — РП срабатывает, как только по силовой цепи пошёл ток.":rn==="АК"?"Регулятор давления АК-11Б: при 6 атм размыкается (компрессор выключается), при 4 атм замыкается снова. Сейчас "+S.press.toFixed(1).replace(".",",")+" атм.":rn==="СП"?"Тепловое реле указателей поворота: прерывает ток — лампы и ЛС5 мигают, пока В46 стоит «налево» или «направо».":rn==="РСП"?"Промежуточное реле: включается при повороте направо и переводит мигание на правые лампы.":rn==="КВ"?"Концевые выключатели дверей: замкнуты, когда двери открыты.":"Реле токовой цепи — в модели не моделируется.")+"</div>";
   if(e.c&&(e.c.indexOf("РК")===0||e.c.indexOf("!РК")===0))h+="<div class='c-n'>Кулачок ГРК, сейчас позиция "+grkInt()+".</div>";
  }
  return h;
@@ -2396,12 +2399,12 @@ function onSvgTap(ev){
  var sh=ACT,e=sh.EL[+di];
  if(VM){var nd=e.a;if(VMA===null){VMA=nd;$("vm").textContent="Вольтметр: точка 1 = "+(sh.FLO[nd]?"—":fmtV(sh.V[nd])+" В")+". Тапни вторую точку";}
   else{var u=(sh.FLO[nd]||sh.FLO[VMA])?null:sh.V[VMA]-sh.V[nd];$("vm").textContent="Вольтметр: U = "+(u===null?"— (точка оторвана)":fmtV(u)+" В")+". Тапни новую точку 1";VMA=null;}return;}
- if(e.k==="sw"||e.k==="bt"){var c=e.c.replace("!","");if(e.k==="sw"){S.sw[c]=!S.sw[c];swPair(c);}else S.bt[c]=!S.bt[c];}
+ if(e.k==="sw"||e.k==="bt"){var c=e.c.replace("!","");if(e.k==="sw"){S.sw[c]=!S.sw[c];swPair(c);}else pressBt(c);}
  SEL=e;SELR=relayOf(e);curInfo={e:e};update();showInfo(infoFor(e));
 }
 /* блокировки: реверсор — только при КВ на «0»; КВ с «0» — только при реверсоре не на «0» */
 var toastT=null;
-function toast(msg){var d=$("toast");if(!d){d=document.createElement("div");d.id="toast";$("main").appendChild(d);}d.textContent=msg;d.style.display="block";clearTimeout(toastT);toastT=setTimeout(function(){d.style.display="none";},2600);}
+function toast(msg){var d=$("toast");if(!d){d=document.createElement("div");d.id="toast";$("main").appendChild(d);}d.textContent=msg;d.style.display="block";clearTimeout(toastT);toastT=setTimeout(function(){d.style.display="none";},Math.min(6000,Math.max(2600,msg.length*45)));}
 function setRev(v){if(v===S.rev)return;if(S.kv!=="0"){toast("Реверсор переключается только при контроллере на «0»");return;}S.rev=v;update();}
 function setKv(v){if(v===S.kv)return;if(S.kv==="0"&&v!=="0"&&S.rev==="0"){toast("Сначала переведи реверсор из «0» в «Вперёд» или «Назад»");return;}S.kv=v;update();}
 function mkBtn(box,txt,fn,cls){var b=document.createElement("button");b.className=cls||"btn";b.textContent=txt;tap(b,fn);box.appendChild(b);return b;}
@@ -2423,9 +2426,14 @@ function buildUI(){
  var TORD=["pow","ctrl","aux","lv"];
  for(i=0;i<SHEETS.length;i++)(function(sh){var b=mkBtn(tb,"",function(){setSheet(sh.id);},"tb tab");b.innerHTML="<span class='fu'>"+sh.title+"</span><span class='sh'>"+SHORT[sh.id]+"</span>";sh.tab=b;})(SHEETS[i]);
 }
+var MOMENT={"ВРП":1},MOMT={};
+function pressBt(c){if(!MOMENT[c]){S.bt[c]=!S.bt[c];return;}
+ if(c==="ВРП"&&S.rp&&S.kv!=="0")toast("«Возврат РП» работает только при КВ на «0»");
+ S.bt[c]=true;clearTimeout(MOMT[c]);MOMT[c]=setTimeout(function(){S.bt[c]=false;update();},700);}
+function envHint(k){if(k==="Перегрузка"&&S.env[k]&&!S.rp)toast("Перегрузка включена: РП сработает, как только по силовой цепи пойдёт ток");}
 function swPair(c){if(c==="В46Л"&&S.sw["В46Л"])S.sw["В46П"]=false;if(c==="В46П"&&S.sw["В46П"])S.sw["В46Л"]=false;}
 function tg(box,obj,names,list,keys){var ks=keys||[];if(!keys)for(var k0 in obj)ks.push(k0);
- for(var i=0;i<ks.length;i++)(function(kk){var d=document.createElement("div");d.className="tg"+(kk==="Перегрузка"?" warn":"");d.innerHTML="<span>"+(names[kk]||kk)+"</span><b></b>";tap(d,function(){obj[kk]=!obj[kk];if(obj===S.sw)swPair(kk);update();});box.appendChild(d);list.push({n:d,f:function(){return obj[kk];},tg:true});})(ks[i]);}
+ for(var i=0;i<ks.length;i++)(function(kk){var d=document.createElement("div");d.className="tg"+(kk==="Перегрузка"?" warn":"");d.innerHTML="<span>"+(names[kk]||kk)+"</span><b></b>";tap(d,function(){if(obj===S.bt)pressBt(kk);else obj[kk]=!obj[kk];if(obj===S.sw)swPair(kk);update();if(obj===S.env)envHint(kk);});box.appendChild(d);list.push({n:d,f:function(){return obj[kk];},tg:true});})(ks[i]);}
 function buildDyn(){
  DYN=[];$("sw").innerHTML="";$("bt").innerHTML="";
  var sws=[],bts=[],seen={},EL=ACT.EL;
@@ -2442,8 +2450,9 @@ function render(){
  var st="<b>"+Math.round(Math.abs(S.v)*3.6)+" км/ч</b> · КВ <b>"+S.kv+"</b> · ГРК <b>"+gi+(onPos()?"":"→"+(gi%17+1))+"</b>"+(S.relay["СД"]&&S.relay["ОВ СД"]?" · <span class='c-ok'>СД крутится</span>":"")+(S.rp?" · <span class='c-no'>РП</span>":"");
  if($("status")._h!==st){$("status")._h=st;$("status").innerHTML=st;}
  for(i=0;i<SHEETS.length;i++){var cc="tb tab"+(SHEETS[i]===ACT?" on":"");if(SHEETS[i].tab.className!==cc)SHEETS[i].tab.className=cc;}
- paint();renderSum();sndWatch();airToast();
+ paint();renderSum();sndWatch();airToast();rpToast();
 }
+function rpToast(){var w=!!S.rpWas;S.rpWas=S.rp;if(S.rp&&!w)toast("Сработало РП (реле перегрузки) — ЛК отключились. Верни КВ на «0» и нажми «Возврат РП»");else if(!S.rp&&w&&S.env["Перегрузка"])toast("РП вернулось, но «Перегрузка» ещё включена — на ходовой позиции РП сработает снова");}
 function airToast(){if(S.revNoAir){if(!S.revNoAirT){S.revNoAirT=true;toast("Реверсор не переключился: нужно не меньше 3,5 атм сжатого воздуха, сейчас "+S.press.toFixed(1).replace(".",",")+" атм");}}else S.revNoAirT=false;S.revNoAir=false;}
 function update(){settle(true);render();refreshInfo();}
 
