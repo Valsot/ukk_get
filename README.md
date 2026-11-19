@@ -6,4 +6,5 @@
 - Тренажёр ЛМ-68М (схема цепей управления с расчётом напряжений и токов): https://valsot.github.io/ukk_get/lm68m/
 - ЛМ-68М, простой режим без схемы: https://valsot.github.io/ukk_get/lm68m/simple.html
 - Зачёт по ОДТ: https://valsot.github.io/ukk_get/zachet-odt/
+- Зачёт по электрооборудованию: https://valsot.github.io/ukk_get/zachet-eo/
 - Редуктор, ЦРП и ЦБТ: https://valsot.github.io/ukk_get/zauchit/
