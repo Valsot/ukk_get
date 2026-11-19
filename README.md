@@ -1,6 +1,9 @@
-# Тренажёр ЛМ-68М
+# УКК ГЭТ
 
-Веб-тренажёр цепей управления трамвая ЛМ-68М: интерактивная схема с расчётом напряжений и токов, анимацией тока, вольтметром. Работает в Safari на iOS 9, на телефонах и компьютерах.
+Тренажёры и шпаргалки к учёбе на водителя трамвая в УКК ГЭТ. Работают в Safari на iOS 9, на телефонах и компьютерах.
 
-- Схема: https://valsot.github.io/lm68m/
-- Простой режим (без схемы): https://valsot.github.io/lm68m/simple.html
+- Все материалы: https://valsot.github.io/ukk_get/
+- Тренажёр ЛМ-68М (схема цепей управления с расчётом напряжений и токов): https://valsot.github.io/ukk_get/lm68m/
+- ЛМ-68М, простой режим без схемы: https://valsot.github.io/ukk_get/lm68m/simple.html
+- Зачёт по ОДТ: https://valsot.github.io/ukk_get/zachet-odt/
+- Редуктор, ЦРП и ЦБТ: https://valsot.github.io/ukk_get/zauchit/
