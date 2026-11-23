@@ -240,7 +240,7 @@ th { font-family: var(--f-display); font-weight: 700; text-transform: uppercase;
 td.n { font-variant-numeric: tabular-nums; font-weight: 600; }
 td .note { font-size: 13px; }
 
-/* главный блок лайфхаков */
+/* главный блок */
 .board { border: 3px solid var(--ink); border-radius: var(--r); background: var(--surface); padding: 16px; }
 .board > * + * { margin-top: 10px; }
 .board h3 {
@@ -407,7 +407,7 @@ details.ans[open] summary { margin-bottom: 4px; }
 footer { color: var(--ink-2); font-size: 13px; padding-bottom: 40px; }
 footer .wrap > * + * { margin-top: 6px; }
 
-/* ── список вопросов с пары ── */
+/* ── список вопросов ── */
 .sub { color: var(--ink-2); max-width: 42rem; }
 .legend { display: flex; flex-wrap: wrap; margin-right: -12px; margin-bottom: -6px; font-size: 14px; color: var(--ink-2); }
 .legend > span { margin: 0 12px 6px 0; }
@@ -1272,7 +1272,7 @@ QB.es = [
         });
       }
     } else if (q.t === 'x') {
-      // порядок букв как в настоящем тесте — так совпадают подсказки вида «А3 Б4…»
+      // порядок букв фиксированный — так совпадают подсказки вида «А3 Б4…»
       var order = q.i.map(function (_, k) { return k; });
       var wrap = el('div', 'match'); body.appendChild(wrap);
       var frame = el('div', 'match-box');

@@ -9,7 +9,7 @@
 (function () {
   var h = (location.hash || '').replace('#', '');
   var es = { 'es-notes': 'konspekt', 'es-numbers': 'cifry', 'es-test': 'test' };
-  var eb = {};
+  var eb = { 'eb-numbers': 'cifry', 'eb-test': 'test' };
   var url = es[h] ? '../zachet-es/#' + es[h] : '../zachet-eb/' + (eb[h] ? '#' + eb[h] : '');
   location.replace(url);
 })();
