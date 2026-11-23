@@ -7,4 +7,6 @@
 - ЛМ-68М, простой режим без схемы: https://valsot.github.io/ukk_get/lm68m/simple.html
 - Зачёт по ОДТ: https://valsot.github.io/ukk_get/zachet-odt/
 - Зачёт по электрооборудованию: https://valsot.github.io/ukk_get/zachet-eo/
+- Зачёт по электробезопасности (охрана труда): https://valsot.github.io/ukk_get/zachet-eb/
+- Зачёт по электроснабжению: https://valsot.github.io/ukk_get/zachet-es/
 - Редуктор, ЦРП и ЦБТ: https://valsot.github.io/ukk_get/zauchit/

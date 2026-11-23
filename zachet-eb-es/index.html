@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Страница переехала</title>
+<meta http-equiv="refresh" content="0; url=../zachet-eb/">
+<script>
+(function () {
+  var h = (location.hash || '').replace('#', '');
+  var es = { 'es-notes': 'konspekt', 'es-numbers': 'cifry', 'es-test': 'test' };
+  var eb = {};
+  var url = es[h] ? '../zachet-es/#' + es[h] : '../zachet-eb/' + (eb[h] ? '#' + eb[h] : '');
+  location.replace(url);
+})();
+</script>
+</head>
+<body style="font-family:sans-serif;padding:24px">
+<p>Страница разделена на две:</p>
+<p><a href="../zachet-eb/">Зачёт по электробезопасности</a> · <a href="../zachet-es/">Зачёт по электроснабжению</a></p>
+</body>
+</html>
