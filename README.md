@@ -9,4 +9,5 @@
 - Зачёт по электрооборудованию: https://valsot.github.io/ukk_get/zachet-eo/
 - Зачёт по охране труда: https://valsot.github.io/ukk_get/zachet-ot/
 - Зачёт по электроснабжению: https://valsot.github.io/ukk_get/zachet-es/
+- Зачёт по ОУТС: https://valsot.github.io/ukk_get/zachet-outs/
 - Редуктор, ЦРП и ЦБТ: https://valsot.github.io/ukk_get/zauchit/
