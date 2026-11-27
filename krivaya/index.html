@@ -84,6 +84,8 @@ table.t .sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin
 .dims .row{display:-webkit-box;display:-webkit-flex;display:flex;-webkit-box-align:center;-webkit-align-items:center;align-items:center}
 .dims .row span{-webkit-box-flex:1;-webkit-flex:1;flex:1;font-size:12.5px;padding-right:8px}
 .dims input{width:92px;height:30px;border:1px solid #cfc8b6;border-radius:6px;padding:0 6px;text-align:right;background:#fff}
+.chamf{display:block;margin:8px 0 2px;font-size:13px;cursor:pointer}
+.chamf input{margin:0 7px 0 0;vertical-align:-2px}
 .lnk{border:0;background:none;color:#1f5fa8;cursor:pointer;padding:0;font-size:13px;text-decoration:underline;margin-top:4px}
 .big{width:100%;height:40px;border:1px solid #1d2430;border-radius:9px;background:#1d2430;color:#fff;font-weight:600;cursor:pointer}
 details{font-size:13px}
@@ -159,6 +161,7 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
       <h2>Вагон</h2>
       <div class="cars" id="cars"></div>
       <div id="carinfo" class="note"></div>
+      <label class="chamf"><input type="checkbox" id="chamf" checked>Скосы маски и хвоста</label>
       <button class="lnk" id="dimsbtn">Изменить размеры</button>
       <div class="dims" id="dims"></div>
     </div>
@@ -191,11 +194,11 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
       <details>
         <summary>Как это считается</summary>
         <p>Вид сверху. Колёсные пары стоят на оси пути, шкворень тележки — посередине между её осями (в кривой он чуть смещён внутрь, на a²/8R). Кузов на двух поворотных тележках проходит через оба шкворня. Неповоротная тележка жёстко держит свою секцию: секция смотрит туда же, куда тележка. Секции соединены шарнирами сочленений. Положение вагона считается точно, без формул-приближений.</p>
-        <p><b>Расстояние до рельса</b> — от угла кузова до рабочей грани рельса своей стороны (колея 1524 мм), по перпендикуляру к оси пути. На прямой у всех углов оно одинаковое: (ширина кузова − 1524) / 2. Минус — угол навис над колеёй, внутрь от рельса.</p>
+        <p><b>Расстояние до рельса</b> — от угла кузова до рабочей грани рельса своей стороны (колея 1524 мм), по перпендикуляру к оси пути. На прямой у всех углов оно одинаковое: (ширина кузова − 1524) / 2. Минус — угол навис над колеёй, внутрь от рельса. У кузова со скосами угла как такового нет: расстояние берётся от той точки скоса, которая дальше всех выступает за рельс (обычно начало скоса на боковине).</p>
         <p><b>Вынос</b> — насколько угол ушёл от рельса по сравнению с прямой. <b>Вп</b> и <b>Вз</b> — вынос маски и хвоста; при заходе и выходе они разные (Вп ≠ Вз): нос уже в кривой, хвост ещё на прямой. <b>Вс</b> — вынос середины кузова внутрь кривой; на схеме он отложен от пунктира, где была бы боковина на прямой.</p>
         <p>Цвет линии: зелёный — как на прямой; через жёлтый к красному — угол дальше от рельса; красный — максимальный вынос на выбранном пути; голубой и синий — угол ближе к рельсу.</p>
         <p>Для одиночного вагона на круговой кривой примерно: Вс ≈ b²/8R, вынос концов ≈ (L² − b²)/8R, где L — длина, b — база, R — радиус.</p>
-        <p>Размеры взяты из открытых источников. Задний свес Богатыря-М — оценка по общей длине; точных схем Довлатова и Достоевского нет, они показаны по схемам Богатыря-М и Витязя-М. Любой размер можно поменять.</p>
+        <p>Размеры взяты из открытых источников. Задний свес Богатыря-М — оценка по общей длине; точных схем Довлатова и Достоевского нет, они показаны по схемам Богатыря-М и Витязя-М. Скосы маски и хвоста примерные, по виду вагонов. Любой размер можно поменять, а скосы — выключить: тогда кузов станет прямоугольником, как в задании.</p>
       </details>
     </div>
   </aside>
@@ -367,6 +370,17 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
       def: { oh: 4756, pj: 6614, mid: 4760, W: 2500, a: 1800 },
       f: [['oh', 'Свес (торец — шкворень)'], ['pj', 'Шкворень — сочленение'], ['mid', 'Длина средней секции'], ['W', 'Ширина кузова'], ['a', 'База тележки']] }
   ];
+  /* скосы маски и хвоста, мм: [маска вдоль, маска поперёк, хвост вдоль, хвост поперёк] — примерные, по виду вагонов */
+  var CHDEF = { lm68: [300, 150, 300, 150], ktm5: [450, 250, 450, 250], lvs86: [300, 150, 300, 150], bog: [700, 300, 500, 200], vit: [700, 300, 700, 300] };
+  var CHK = { fl: 1, fw: 1, rl: 1, rw: 1 };
+  (function () {
+    var i, c, d;
+    for (i = 0; i < CARS.length; i++) {
+      c = CARS[i]; d = CHDEF[c.id];
+      c.def.fl = d[0]; c.def.fw = d[1]; c.def.rl = d[2]; c.def.rw = d[3];
+      c.f.push(['fl', 'Скос маски вдоль кузова'], ['fw', 'Скос маски поперёк (срез угла)'], ['rl', 'Скос хвоста вдоль кузова'], ['rw', 'Скос хвоста поперёк (срез угла)']);
+    }
+  })();
   function carNote(id, p) {
     if (id === 'lm68') return 'База ' + grp(p.b) + ', свесы по ' + grp(Math.round((p.L - p.b) / 2)) + ' мм. Ширина по паспорту 2 550 (в задании округлено до 2,6 м).';
     if (id === 'ktm5') return 'База ' + grp(p.b) + ', свесы по ' + grp(Math.round((p.L - p.b) / 2)) + ' мм. Ширина по обшивке 2 600 (габаритная 2 650; в Википедии указано 2 550).';
@@ -375,8 +389,11 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
     return 'Крайние секции по ' + grp(p.oh + p.pj) + ', средняя ' + grp(p.mid) + ' мм, неповоротная тележка в её середине. База ' + grp(Math.round(p.pj + p.mid / 2)) + ' мм. У Достоевского длина около 26 950 — показан Витязь-М.';
   }
   function checkDims(id, p) {
-    var k;
-    for (k in p) if (p.hasOwnProperty(k)) { if (!(p[k] > 0) || !isFinite(p[k])) return 'Размеры должны быть положительными числами.'; if (p[k] > 40000) return 'Слишком большой размер.'; }
+    var k, ohF, ohR;
+    for (k in p) if (p.hasOwnProperty(k)) {
+      if (!isFinite(p[k]) || (CHK[k] ? !(p[k] >= 0) : !(p[k] > 0))) return CHK[k] ? 'Скос — ноль или положительное число.' : 'Размеры должны быть положительными числами.';
+      if (p[k] > 40000) return 'Слишком большой размер.';
+    }
     if (p.W < 1800 || p.W > 3400) return 'Ширина — от 1 800 до 3 400 мм.';
     if (p.a < 800 || p.a > 3500) return 'База тележки — от 800 до 3 500 мм.';
     if (id === 'lm68' || id === 'ktm5') { if (p.b >= p.L) return 'База должна быть меньше длины.'; if (p.b < p.a + 1000) return 'База слишком мала.'; }
@@ -384,10 +401,14 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
     if (id === 'bog' || id === 'vit') { if (p.pj < p.a) return 'Шкворень слишком близко к сочленению.'; }
     if (id === 'bog' && p.jr < p.a / 2) return 'Неповоротная тележка слишком близко к сочленению.';
     if (id === 'vit' && p.mid < p.a + 400) return 'Средняя секция короче тележки.';
+    ohF = (id === 'lm68' || id === 'ktm5') ? (p.L - p.b) / 2 : p.oh;
+    ohR = (id === 'lm68' || id === 'ktm5') ? (p.L - p.b) / 2 : (id === 'bog' ? p.rh : p.oh);
+    if (p.fl > ohF - 300 || p.rl > ohR - 300) return 'Скос длиннее свеса: он должен кончаться хотя бы за 300 мм до шкворня.';
+    if (p.fw > p.W / 2 - 300 || p.rw > p.W / 2 - 300) return 'Скос слишком глубокий: торец должен остаться шире 600 мм.';
     return '';
   }
   function makeSpec(id, p) {
-    var m = 0.001, sp = { id: id, W: p.W * m, a: p.a * m, J: [], bog: [], secs: [] }, o, j1, j2, k, n, i, b, xa, xb;
+    var m = 0.001, sp = { id: id, W: p.W * m, a: p.a * m, J: [], bog: [], secs: [] }, o, j1, j2, k, n, i, b, xa, xb, sc, hw, out;
     if (id === 'lm68' || id === 'ktm5') {
       sp.L = p.L * m; o = (p.L - p.b) / 2 * m;
       sp.bog = [{ x: o, t: 'P' }, { x: sp.L - o, t: 'P' }];
@@ -413,6 +434,18 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
     }
     sp.x1 = sp.bog[0].x; sp.xN = sp.bog[sp.bog.length - 1].x;
     sp.d0 = sp.W / 2 - G2;
+    /* контур каждой секции в её осях: x — от маски назад, y — влево; у маски и хвоста углы скошены */
+    sp.cf = CHAMF && p.fl > 0 && p.fw > 0 ? { l: p.fl * m, w: p.fw * m } : null;
+    sp.cr = CHAMF && p.rl > 0 && p.rw > 0 ? { l: p.rl * m, w: p.rw * m } : null;
+    hw = sp.W / 2;
+    for (k = 0; k < n; k++) {
+      sc = sp.secs[k]; out = [];
+      if (k === 0 && sp.cf) out.push([sc.fa + sp.cf.l, hw], [sc.fa, hw - sp.cf.w], [sc.fa, -hw + sp.cf.w], [sc.fa + sp.cf.l, -hw]);
+      else out.push([sc.fa, hw], [sc.fa, -hw]);
+      if (k === n - 1 && sp.cr) out.push([sc.fb - sp.cr.l, -hw], [sc.fb, -hw + sp.cr.w], [sc.fb, hw - sp.cr.w], [sc.fb - sp.cr.l, hw]);
+      else out.push([sc.fb, -hw], [sc.fb, hw]);
+      sc.out = out;
+    }
     return sp;
   }
 
@@ -435,6 +468,7 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
   }
   function setSec(o, xr, px, py, ux, uy) { o.xr = xr; o.px = px; o.py = py; o.ux = ux; o.uy = uy; }
   function secPt(o, x, out) { var t = o.xr - x; out.x = o.px + t * o.ux; out.y = o.py + t * o.uy; return out; }
+  function locPt(o, x, y, out) { var t = o.xr - x; out.x = o.px + t * o.ux - y * o.uy; out.y = o.py + t * o.uy + y * o.ux; return out; }
   function sidePt(o, x, side, W, out) {
     var t = o.xr - x, w = side * W / 2;
     out.x = o.px + t * o.ux - w * o.uy; out.y = o.py + t * o.uy + w * o.ux;
@@ -507,13 +541,21 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
     o.fx = PJ.x - side * G2 * Math.sin(PJ.h); o.fy = PJ.y + side * G2 * Math.cos(PJ.h); o.h = PJ.h; o.s = PJ.s; o.tx = PJ.x; o.ty = PJ.y;
   }
   /* углы: 0 — маска слева, 1 — маска справа, 2 — хвост слева, 3 — хвост справа (по ходу движения) */
+  var CQ = { x: 0, y: 0 };
   function measCorner(sp, tr, P, ci, o) {
-    var last = sp.secs.length - 1, sec = ci < 2 ? P.sec[0] : P.sec[last], x = ci < 2 ? 0 : sp.L, side = (ci & 1) ? -1 : 1, se;
-    sidePt(sec, x, side, sp.W, o);
-    se = estS(sp, P, x);
-    tr.project(o.x, o.y, se - 4, se + 4, PJ);
-    o.side = side; o.d = side * PJ.n - G2; o.dl = o.d - sp.d0;
-    footOf(o, side);
+    var front = ci < 2, sec = front ? P.sec[0] : P.sec[sp.secs.length - 1], side = (ci & 1) ? -1 : 1, ch = front ? sp.cf : sp.cr;
+    var xe = front ? 0 : sp.L, dir = front ? 1 : -1, hw = sp.W / 2, ns = ch ? 4 : 0, j, t, x, y, se, d, best = -1e9;
+    /* у скошенного угла берём ту точку скоса, что дальше всех выступает за рельс */
+    for (j = 0; j <= ns; j++) {
+      t = ns ? j / ns : 0;
+      x = ch ? xe + dir * ch.l * (1 - t) : xe;
+      y = side * (ch ? hw - ch.w * t : hw);
+      locPt(sec, x, y, CQ); se = estS(sp, P, x);
+      tr.project(CQ.x, CQ.y, se - 4, se + 4, PJ);
+      d = side * PJ.n - G2;
+      if (d > best) { best = d; o.x = CQ.x; o.y = CQ.y; o.d = d; footOf(o, side); }
+    }
+    o.side = side; o.dl = o.d - sp.d0;
     return o;
   }
   /* вынос середины внутрь кривой: точки боковины между крайними опорами со стороны центра кривой */
@@ -589,28 +631,29 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
     this.pS[key] = s; this.pN[key] = n;
   };
   Run.prototype.one = function (i) {
-    var sp = this.sp, tr = this.tr, P = this.P, c = this.C, k, ci, j, x, side, se, ns, sec, A, sf = this.S0 + i * this.ds;
+    var sp = this.sp, tr = this.tr, P = this.P, c = this.C, k, ci, j, q, x, y, se, ns, out, a0, a1, A, sf = this.S0 + i * this.ds;
     solve(sp, tr, sf, P);
     for (ci = 0; ci < 4; ci++) {
       measCorner(sp, tr, P, ci, c);
       this.dl[ci][i] = c.dl; this.tx[ci][2 * i] = c.x; this.tx[ci][2 * i + 1] = c.y;
     }
     for (k = 0; k < sp.secs.length; k++) {
-      sec = sp.secs[k];
-      for (j = 0; j < 4; j++) {
-        x = j < 2 ? sec.fa : sec.fb; side = (j & 1) ? -1 : 1;
-        sidePt(P.sec[k], x, side, sp.W, Q); se = estS(sp, P, x);
+      out = sp.secs[k].out;
+      for (j = 0; j < out.length; j++) {
+        locPt(P.sec[k], out[j][0], out[j][1], Q); se = estS(sp, P, out[j][0]);
         tr.project(Q.x, Q.y, se - 4, se + 4, PJ);
-        this.envPut(k * 4 + j, PJ.s, PJ.n);
+        this.envPut(k * 10 + j, PJ.s, PJ.n);
       }
     }
     if (i % 4 === 0 || i === this.N - 1) {
       for (k = 0; k < sp.secs.length; k++) {
-        sec = sp.secs[k]; ns = Math.max(1, Math.ceil((sec.fb - sec.fa) / 0.3));
-        for (j = 1; j < ns; j++) {
-          x = sec.fa + (sec.fb - sec.fa) * j / ns; se = estS(sp, P, x);
-          for (side = -1; side <= 1; side += 2) {
-            sidePt(P.sec[k], x, side, sp.W, Q); tr.project(Q.x, Q.y, se - 4, se + 4, PJ);
+        out = sp.secs[k].out;
+        for (j = 0; j < out.length; j++) {
+          a0 = out[j]; a1 = out[(j + 1) % out.length];
+          ns = Math.max(1, Math.ceil(hyp(a1[0] - a0[0], a1[1] - a0[1]) / 0.3));
+          for (q = 1; q < ns; q++) {
+            x = a0[0] + (a1[0] - a0[0]) * q / ns; y = a0[1] + (a1[1] - a0[1]) * q / ns;
+            locPt(P.sec[k], x, y, Q); se = estS(sp, P, x); tr.project(Q.x, Q.y, se - 4, se + 4, PJ);
             this.envIdx(Math.round((PJ.s - this.es0) / this.eds), PJ.n);
           }
         }
@@ -685,7 +728,7 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
   function readTheme() { DARK = !!(mq && mq.matches); }
 
   /* ================= состояние ================= */
-  var carIdx = 0, trackIdx = 0, RAD = 25, INS = 0, pos = 0, playing = false, speed = 2.8, follow = false;
+  var carIdx = 0, trackIdx = 0, RAD = 25, INS = 0, pos = 0, playing = false, speed = 2.8, follow = false, CHAMF = true;
   var params = {}, spec = null, track = null, run = null, need = true, tabsDirty = true;
   var cur = { P: null, c: [{}, {}, {}, {}], m: {}, A: {} };
   var LAYDEF = [['lines', 'Линии от углов до рельса', 1], ['labels', 'Подписи расстояний', 1], ['mid', 'Вынос середины (Вс)', 1], ['env', 'Габаритная полоса всего пути', 1], ['trace', 'Следы углов', 1], ['glass', 'Прозрачный кузов (видно тележки)', 1], ['sleep', 'Шпалы', 1], ['axes', 'Оси секций и хорды тележек', 0], ['panel', 'Табличка с цифрами на схеме', 1]];
@@ -814,14 +857,14 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
     }
   }
   function drawVehicle(c, X, Y, k, pal) {
-    var sp = spec, P = cur.P, secs = sp.secs, n = secs.length, i, kk, sec, col = CARS[carIdx].col, rgb = hexRGB(col), t, cab = [rgb[0] * 0.45, rgb[1] * 0.45, rgb[2] * 0.45];
+    var sp = spec, P = cur.P, secs = sp.secs, n = secs.length, i, j, kk, sec, out, cabD, col = CARS[carIdx].col, rgb = hexRGB(col), t, cab = [rgb[0] * 0.45, rgb[1] * 0.45, rgb[2] * 0.45];
     var fillA = LAY.glass ? (DARK ? 0.45 : 0.38) : 0.97, lw = Math.max(1, Math.min(2.4, 0.07 * k)), wb = sp.W * 0.9;
     if (LAY.glass) for (i = 0; i < sp.bog.length; i++) drawBogie(c, X, Y, k, pal, P.bog[i], sp.bog[i].t === 'R', sp.a);
     for (kk = 0; kk < n; kk++) {
-      sec = P.sec[kk];
-      sidePt(sec, secs[kk].fa, 1, sp.W, VA); sidePt(sec, secs[kk].fa, -1, sp.W, VB);
-      sidePt(sec, secs[kk].fb, -1, sp.W, VC); sidePt(sec, secs[kk].fb, 1, sp.W, VD);
-      c.beginPath(); c.moveTo(X(VA.x), Y(VA.y)); c.lineTo(X(VB.x), Y(VB.y)); c.lineTo(X(VC.x), Y(VC.y)); c.lineTo(X(VD.x), Y(VD.y)); c.closePath();
+      sec = P.sec[kk]; out = secs[kk].out;
+      c.beginPath();
+      for (j = 0; j < out.length; j++) { locPt(sec, out[j][0], out[j][1], VA); if (j) c.lineTo(X(VA.x), Y(VA.y)); else c.moveTo(X(VA.x), Y(VA.y)); }
+      c.closePath();
       c.fillStyle = css(rgb, fillA); c.fill(); c.strokeStyle = col; c.lineWidth = lw; c.stroke();
     }
     for (kk = 0; kk < n - 1; kk++) {
@@ -841,12 +884,13 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
       c.beginPath(); c.arc(X(VA.x), Y(VA.y), Math.max(2.5, 0.12 * k), 0, TWO_PI); c.fillStyle = pal.ink; c.fill();
     }
     /* кабина: тёмная полоса у маски и стрелка хода */
-    sec = P.sec[0];
-    sidePt(sec, 0, 1, sp.W, VA); sidePt(sec, 0, -1, sp.W, VB); sidePt(sec, 0.6, -1, sp.W, VC); sidePt(sec, 0.6, 1, sp.W, VD);
-    c.beginPath(); c.moveTo(X(VA.x), Y(VA.y)); c.lineTo(X(VB.x), Y(VB.y)); c.lineTo(X(VC.x), Y(VC.y)); c.lineTo(X(VD.x), Y(VD.y)); c.closePath();
+    sec = P.sec[0]; out = secs[0].out; cabD = Math.max(0.6, sp.cf ? sp.cf.l + 0.25 : 0);
+    c.beginPath(); locPt(sec, cabD, sp.W / 2, VA); c.moveTo(X(VA.x), Y(VA.y));
+    for (j = 0; j < (sp.cf ? 4 : 2); j++) { locPt(sec, out[j][0], out[j][1], VA); c.lineTo(X(VA.x), Y(VA.y)); }
+    locPt(sec, cabD, -sp.W / 2, VA); c.lineTo(X(VA.x), Y(VA.y)); c.closePath();
     c.fillStyle = css(cab, LAY.glass ? 0.75 : 1); c.fill();
     if (k > 3) {
-      sidePt(sec, 1.3, 0, sp.W, VA); sidePt(sec, 2.3, 0.55, sp.W, VB); sidePt(sec, 2.3, -0.55, sp.W, VC);
+      locPt(sec, cabD + 0.7, 0, VA); locPt(sec, cabD + 1.7, 0.7, VB); locPt(sec, cabD + 1.7, -0.7, VC);
       c.beginPath(); c.moveTo(X(VB.x), Y(VB.y)); c.lineTo(X(VA.x), Y(VA.y)); c.lineTo(X(VC.x), Y(VC.y));
       c.strokeStyle = css(cab, 0.9); c.lineWidth = Math.max(1.5, 0.12 * k); c.lineCap = 'round'; c.lineJoin = 'round'; c.stroke(); c.lineCap = 'butt';
     }
@@ -1099,14 +1143,16 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
   }
   function buildDims() {
     var car = CARS[carIdx], p = params[car.id], h = '', i, f;
-    for (i = 0; i < car.f.length; i++) { f = car.f[i]; h += '<div class="row"><span>' + f[1] + ', мм</span><input type="number" inputmode="numeric" step="1" min="1" data-k="' + f[0] + '" value="' + p[f[0]] + '"></div>'; }
+    for (i = 0; i < car.f.length; i++) { f = car.f[i]; h += '<div class="row"><span>' + f[1] + ', мм</span><input type="number" inputmode="numeric" step="1" min="' + (CHK[f[0]] ? 0 : 1) + '" data-k="' + f[0] + '" value="' + p[f[0]] + '"></div>'; }
     h += '<div class="note warn" id="dmerr"></div><button class="lnk" id="dmreset">Вернуть исходные размеры</button>';
     $('dims').innerHTML = h;
   }
   function edited(id) { var p = params[id], k; for (k in p) if (p.hasOwnProperty(k) && p[k] !== CARS[carIdx].def[k]) return true; return false; }
   function carInfo() {
     var car = CARS[carIdx], p = params[car.id];
-    $('carinfo').innerHTML = 'Длина ' + grp(mmi(spec.L)) + ' мм, ширина ' + grp(p.W) + ', база тележки ' + grp(p.a) + '. ' + carNote(car.id, p) + (edited(car.id) ? ' <span class="warn">Размеры изменены.</span>' : '');
+    $('carinfo').innerHTML = 'Длина ' + grp(mmi(spec.L)) + ' мм, ширина ' + grp(p.W) + ', база тележки ' + grp(p.a) + '. ' + carNote(car.id, p) +
+      (CHAMF ? ' Скосы примерные: маска ' + grp(p.fl) + ' × ' + grp(p.fw) + ', хвост ' + grp(p.rl) + ' × ' + grp(p.rw) + ' мм (вдоль × поперёк).' : ' Скосы выключены: кузов — прямоугольник, как в задании.') +
+      (edited(car.id) ? ' <span class="warn">Размеры изменены.</span>' : '');
   }
   function trackInfo() {
     var t = TRACKS[trackIdx], s = '', i, la = 0;
@@ -1274,6 +1320,7 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
       var k = e.target.getAttribute('data-k'); if (!k) return;
       LAY[k] = e.target.checked; saveState(); need = true;
     });
+    $('chamf').addEventListener('change', function () { CHAMF = this.checked; store.set('chamf', CHAMF ? 1 : 0); rebuild(false); });
     $('dimsbtn').addEventListener('click', function () { var d = $('dims'); d.className = d.className.indexOf('open') < 0 ? 'dims open' : 'dims'; });
     $('dims').addEventListener('change', function (e) {
       var k = e.target.getAttribute('data-k'), car = CARS[carIdx], p = {}, q, err;
@@ -1369,11 +1416,13 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
     sp = jget('params') || {};
     for (i = 0; i < CARS.length; i++) {
       p = {};
-      for (k in CARS[i].def) if (CARS[i].def.hasOwnProperty(k)) p[k] = (sp[CARS[i].id] && sp[CARS[i].id][k] > 0) ? sp[CARS[i].id][k] : CARS[i].def[k];
+      for (k in CARS[i].def) if (CARS[i].def.hasOwnProperty(k)) p[k] = (sp[CARS[i].id] && typeof sp[CARS[i].id][k] === 'number' && (CHK[k] ? sp[CARS[i].id][k] >= 0 : sp[CARS[i].id][k] > 0)) ? sp[CARS[i].id][k] : CARS[i].def[k];
       if (checkDims(CARS[i].id, p)) p = JSON.parse(JSON.stringify(CARS[i].def));
       params[CARS[i].id] = p;
     }
     v = store.get('carId'); for (i = 0; i < CARS.length; i++) if (CARS[i].id === v) carIdx = i;
+    if (store.get('chamf') === '0') CHAMF = false;
+    $('chamf').checked = CHAMF;
     v = store.get('track'); if (v !== null && +v >= 0 && +v < TRACKS.length) trackIdx = +v;
     v = store.get('R'); if (v !== null && +v >= 14 && +v <= 60) RAD = +v;
     v = store.get('ins'); if (v !== null && +v >= 0 && +v <= 20) INS = +v;
@@ -1389,6 +1438,7 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
     get: function () { return { pos: pos, run: run, cur: cur, spec: spec, track: track, view: view }; },
     setPos: setPos,
     setCar: function (i) { carIdx = i; buildDims(); rebuild(true); },
+    chamf: function (on) { CHAMF = on; $('chamf').checked = on; rebuild(false); },
     setTrack: function (i) { trackIdx = i; rebuild(true); },
     setR: function (r) { RAD = r; $('rad').value = String(r); $('radv').innerHTML = r + ' м'; rebuild(false); },
     setIns: function (v) { INS = v; $('ins').value = String(v); $('insv').innerHTML = num(v) + ' м'; rebuild(false); },
