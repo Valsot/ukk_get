@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Заход трамвая в кривую</title>
-<meta name="description" content="Эмулятор захода трамвая в кривую: ЛМ-68М, КТМ-5, ЛВС-86, Богатырь-М, Витязь-М. Расстояния от углов маски и хвоста до рельса, вынос концов и середины кузова, поворотные и неповоротные тележки, габаритная полоса.">
+<meta name="description" content="Эмулятор захода трамвая в кривую: ЛМ-68М, КТМ-5, ЛМ-2008, ЛВС-86, ЛВС-97, ЛВС-2005, Богатырь-М, Витязь-М. Расстояния от углов маски и хвоста до рельса, вынос концов и середины кузова, поворотные и неповоротные тележки, габаритная полоса.">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="ru_RU">
 <meta property="og:title" content="Заход трамвая в кривую">
-<meta property="og:description" content="Вынос углов маски и хвоста, середины кузова и габаритная полоса для ЛМ-68М, КТМ-5, ЛВС-86, Богатыря-М и Витязя-М на кривых разного радиуса.">
+<meta property="og:description" content="Вынос углов маски и хвоста, середины кузова и габаритная полоса для ЛМ-68М, КТМ-5, ЛМ-2008, ЛВС-86, ЛВС-97, ЛВС-2005, Богатыря-М и Витязя-М на кривых разного радиуса.">
 <style>
 html,body{margin:0;padding:0}
 body{background:#f3f1ea;color:#1d2430;font:14px/1.45 -apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-text-size-adjust:100%}
@@ -198,7 +198,8 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
         <p><b>Вынос</b> — насколько угол ушёл от рельса по сравнению с прямой. <b>Вп</b> и <b>Вз</b> — вынос маски и хвоста; при заходе и выходе они разные (Вп ≠ Вз): нос уже в кривой, хвост ещё на прямой. <b>Вс</b> — вынос середины кузова внутрь кривой; на схеме он отложен от пунктира, где была бы боковина на прямой.</p>
         <p>Цвет линии: зелёный — как на прямой; через жёлтый к красному — угол дальше от рельса; красный — максимальный вынос на выбранном пути; голубой и синий — угол ближе к рельсу.</p>
         <p>Для одиночного вагона на круговой кривой примерно: Вс ≈ b²/8R, вынос концов ≈ (L² − b²)/8R, где L — длина, b — база, R — радиус.</p>
-        <p>Размеры взяты из открытых источников. Задний свес Богатыря-М — оценка по общей длине; точных схем Довлатова и Достоевского нет, они показаны по схемам Богатыря-М и Витязя-М. Скосы маски и хвоста примерные, по виду вагонов. Любой размер можно поменять, а скосы — выключить: тогда кузов станет прямоугольником, как в задании.</p>
+        <p>У сочленённых вагонов показан ещё угол у сочленения — тот из углов секций у гармошки, что дальше всех выступает за рельс. У ЛВС-97 и ЛВС-2005 сочленение навесное: оно висит на передней секции за средней тележкой, поэтому в кривой уходит наружу, а задняя секция тянется за ним.</p>
+        <p>Размеры: ЛМ-68М, ЛВС-86К и КТМ-5М3 — по чертежам; ЛВС-97 и ЛВС-2005 — по открытым источникам и видам сбоку. Скосы ЛМ-2008, Довлатова и трёхсекционного вагона сняты с видов сверху, у ЛВС-97 — по фото, у ЛВС-2005 взяты как у ЛМ-2008; задний свес Богатыря-М — оценка. Любой размер можно поменять, а скосы — выключить: тогда кузов станет прямоугольником, как в задании.</p>
       </details>
     </div>
   </aside>
@@ -353,69 +354,102 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
   }
 
   /* ================= вагоны ================= */
+  /* типы: single — один кузов на двух поворотных тележках; jac — средняя тележка под сочленением;
+     hang — навесное сочленение (передняя секция на двух тележках, задняя на одной);
+     bog — поворотная + неповоротная; vit — три секции, неповоротная тележка в средней */
   var CARS = [
-    { id: 'lm68', name: 'ЛМ-68М', sub: 'одновагонный · 2 поворотные тележки', col: '#c8423b',
-      def: { L: 15000, b: 7500, W: 2550, a: 1940 },
-      f: [['L', 'Длина кузова'], ['b', 'База (шкворень — шкворень)'], ['W', 'Ширина кузова'], ['a', 'База тележки']] },
-    { id: 'ktm5', name: 'КТМ-5 (71-605)', sub: 'одновагонный · 2 поворотные тележки', col: '#8457b3',
-      def: { L: 15000, b: 7500, W: 2600, a: 1940 },
-      f: [['L', 'Длина кузова'], ['b', 'База (шкворень — шкворень)'], ['W', 'Ширина кузова'], ['a', 'База тележки']] },
-    { id: 'lvs86', name: 'ЛВС-86', sub: '2 секции · 3 поворотные тележки, средняя под сочленением', col: '#d9822b',
-      def: { Ls: 11250, oh: 3750, W: 2550, a: 1940 },
-      f: [['Ls', 'Длина секции'], ['oh', 'Свес (торец — шкворень)'], ['W', 'Ширина кузова'], ['a', 'База тележки']] },
-    { id: 'bog', name: 'Богатырь-М / Довлатов', sub: '2 секции · поворотная + неповоротная тележка', col: '#2f8a76',
-      def: { oh: 4756, pj: 6614, jr: 2380, rh: 5655, W: 2500, a: 1800 },
-      f: [['oh', 'Передний свес (торец — шкворень)'], ['pj', 'Шкворень — сочленение'], ['jr', 'Сочленение — неповоротная тележка'], ['rh', 'Задний свес (от неповоротной тележки)'], ['W', 'Ширина кузова'], ['a', 'База тележки']] },
-    { id: 'vit', name: 'Невский / Витязь-М / Достоевский', sub: '3 секции · 2 поворотные + неповоротная в средней', col: '#3d68b8',
-      def: { oh: 4756, pj: 6614, mid: 4760, W: 2500, a: 1800 },
-      f: [['oh', 'Свес (торец — шкворень)'], ['pj', 'Шкворень — сочленение'], ['mid', 'Длина средней секции'], ['W', 'Ширина кузова'], ['a', 'База тележки']] }
+    { id: 'lm68', type: 'single', name: 'ЛМ-68М', sub: 'одновагонный · 2 поворотные тележки', col: '#c8423b',
+      def: { L: 15000, ohF: 3750, b: 7500, W: 2550, a: 1940 } },
+    { id: 'ktm5', type: 'single', name: 'КТМ-5 (71-605)', sub: 'одновагонный · 2 поворотные тележки', col: '#8457b3',
+      def: { L: 15076, ohF: 3964, b: 7500, W: 2600, a: 1940 } },
+    { id: 'lm2008', type: 'single', name: 'ЛМ-2008 (71-153)', sub: 'одновагонный · 2 поворотные тележки · низкий пол в середине', col: '#b23a6e',
+      def: { L: 15000, ohF: 3750, b: 7500, W: 2500, a: 1940 } },
+    { id: 'lvs86', type: 'jac', name: 'ЛВС-86', sub: '2 секции · 3 поворотные тележки, средняя под сочленением', col: '#d9822b',
+      def: { Ls: 11250, oh: 3750, W: 2550, a: 1940 } },
+    { id: 'lvs97', type: 'hang', name: 'ЛВС-97 (71-147)', sub: '2 секции · навесное сочленение, задняя секция на одной тележке', col: '#a8791a',
+      def: { ohF: 3230, b1: 7500, jo: 2080, b2: 7500, ohR: 3770, W: 2550, a: 1940 } },
+    { id: 'lvs2005', type: 'hang', name: 'ЛВС-2005 (71-152)', sub: '2 секции · навесное сочленение, низкий пол в середине', col: '#5f8f2f',
+      def: { ohF: 3800, b1: 7500, jo: 2220, b2: 7500, ohR: 3700, W: 2550, a: 1940 } },
+    { id: 'bog', type: 'bog', name: 'Богатырь-М / Довлатов', sub: '2 секции · поворотная + неповоротная тележка', col: '#2f8a76',
+      def: { oh: 4756, pj: 6614, jr: 2380, rh: 5655, W: 2500, a: 1800 } },
+    { id: 'vit', type: 'vit', name: 'Невский / Витязь-М / Достоевский', sub: '3 секции · 2 поворотные + неповоротная в средней', col: '#3d68b8',
+      def: { oh: 4756, pj: 6614, mid: 4760, W: 2500, a: 1800 } }
   ];
-  /* скосы маски и хвоста, мм: [маска вдоль, маска поперёк, хвост вдоль, хвост поперёк] — примерные, по виду вагонов */
-  var CHDEF = { lm68: [300, 150, 300, 150], ktm5: [450, 250, 450, 250], lvs86: [300, 150, 300, 150], bog: [700, 300, 500, 200], vit: [700, 300, 700, 300] };
-  var CHK = { fl: 1, fw: 1, rl: 1, rw: 1 };
+  var FIELDS = {
+    single: [['L', 'Длина кузова'], ['ohF', 'Передний свес (маска — шкворень)'], ['b', 'База (шкворень — шкворень)']],
+    jac: [['Ls', 'Длина секции'], ['oh', 'Свес (торец — шкворень)']],
+    hang: [['ohF', 'Передний свес (маска — шкворень)'], ['b1', 'База передней секции'], ['jo', 'Средняя тележка — сочленение'], ['b2', 'Средняя тележка — задняя тележка'], ['ohR', 'Задний свес (от задней тележки)']],
+    bog: [['oh', 'Передний свес (торец — шкворень)'], ['pj', 'Шкворень — сочленение'], ['jr', 'Сочленение — неповоротная тележка'], ['rh', 'Задний свес (от неповоротной тележки)']],
+    vit: [['oh', 'Свес (торец — шкворень)'], ['pj', 'Шкворень — сочленение'], ['mid', 'Длина средней секции']]
+  };
+  /* скосы маски и хвоста, мм: [маска вдоль, маска поперёк, хвост вдоль, хвост поперёк]
+     ЛМ-68М, ЛВС-86К, КТМ-5М3 — по чертежам; ЛМ-2008, Довлатов, трёхсекционный — по видам сверху; ЛВС-97 — по фото */
+  var CHDEF = { lm68: [2040, 427, 2040, 427], ktm5: [900, 400, 750, 300], lm2008: [2000, 460, 2000, 430], lvs86: [2040, 427, 1750, 260],
+    lvs97: [400, 200, 400, 200], lvs2005: [2000, 430, 2000, 430], bog: [1850, 520, 1850, 350], vit: [1700, 600, 1700, 600] };
+  var CHK = { fl: 1, fw: 1, rl: 1, rw: 1 }, TYPE = {};
   (function () {
     var i, c, d;
     for (i = 0; i < CARS.length; i++) {
-      c = CARS[i]; d = CHDEF[c.id];
+      c = CARS[i]; d = CHDEF[c.id]; TYPE[c.id] = c.type;
       c.def.fl = d[0]; c.def.fw = d[1]; c.def.rl = d[2]; c.def.rw = d[3];
-      c.f.push(['fl', 'Скос маски вдоль кузова'], ['fw', 'Скос маски поперёк (срез угла)'], ['rl', 'Скос хвоста вдоль кузова'], ['rw', 'Скос хвоста поперёк (срез угла)']);
+      c.f = FIELDS[c.type].concat([['W', 'Ширина кузова'], ['a', 'База тележки'], ['fl', 'Скос маски вдоль кузова'], ['fw', 'Скос маски поперёк (срез угла)'], ['rl', 'Скос хвоста вдоль кузова'], ['rw', 'Скос хвоста поперёк (срез угла)']]);
     }
   })();
+  function overhangs(id, p) {
+    var t = TYPE[id];
+    if (t === 'single') return [p.ohF, p.L - p.ohF - p.b];
+    if (t === 'hang') return [p.ohF, p.ohR];
+    if (t === 'bog') return [p.oh, p.rh];
+    return [p.oh, p.oh];
+  }
   function carNote(id, p) {
-    if (id === 'lm68') return 'База ' + grp(p.b) + ', свесы по ' + grp(Math.round((p.L - p.b) / 2)) + ' мм. Ширина по паспорту 2 550 (в задании округлено до 2,6 м).';
-    if (id === 'ktm5') return 'База ' + grp(p.b) + ', свесы по ' + grp(Math.round((p.L - p.b) / 2)) + ' мм. Ширина по обшивке 2 600 (габаритная 2 650; в Википедии указано 2 550).';
-    if (id === 'lvs86') return 'Две секции по ' + grp(p.Ls) + ' мм. Средняя тележка — под сочленением, до крайних по ' + grp(p.Ls - p.oh) + ' мм.';
-    if (id === 'bog') return 'Свес ' + grp(p.oh) + ', от шкворня до сочленения ' + grp(p.pj) + ', неповоротная тележка в ' + grp(p.jr) + ' за сочленением, задний свес ' + grp(p.rh) + ' (оценка). Схемы Довлатова нет — показан Богатырь-М.';
-    return 'Крайние секции по ' + grp(p.oh + p.pj) + ', средняя ' + grp(p.mid) + ' мм, неповоротная тележка в её середине. База ' + grp(Math.round(p.pj + p.mid / 2)) + ' мм. У Достоевского длина около 26 950 — показан Витязь-М.';
+    var o = overhangs(id, p), t = TYPE[id];
+    if (id === 'lm68') return 'База ' + grp(p.b) + ', свесы по ' + grp(o[0]) + ' мм. Концы кузова сужаются, как на чертеже. Ширина по паспорту 2 550 (в задании округлено до 2,6 м).';
+    if (id === 'ktm5') return 'База ' + grp(p.b) + ', свес спереди ' + grp(o[0]) + ', сзади ' + grp(o[1]) + ' мм — по чертежу КТМ-5М3. Ширина по обшивке 2 600 (габаритная 2 650).';
+    if (id === 'lm2008') return 'База ' + grp(p.b) + ', свесы ' + grp(o[0]) + ' / ' + grp(o[1]) + ' мм. Скосы — по виду сверху, примерно.';
+    if (t === 'single') return 'База ' + grp(p.b) + ', свесы ' + grp(o[0]) + ' / ' + grp(o[1]) + ' мм.';
+    if (t === 'jac') return 'Две секции по ' + grp(p.Ls) + ' мм. Средняя тележка — под сочленением, до крайних по ' + grp(p.Ls - p.oh) + ' мм. Маска как у ЛМ-68М, хвост по чертежу ЛВС-86К.';
+    if (t === 'hang') return 'Передняя секция на двух поворотных тележках (база ' + grp(p.b1) + '), сочленение навесное — в ' + grp(p.jo) + ' мм за средней тележкой, поэтому в кривой его выносит наружу. Задняя секция опирается на сочленение и свою тележку в ' + grp(p.b2) + ' мм от средней.' +
+      (id === 'lvs97' ? ' Кузов почти прямоугольный, скосы короткие (по фото), свесы — по чертежу вида сбоку.' : ' Свесы — по чертежу вида сбоку, скосы взяты как у ЛМ-2008.');
+    if (t === 'bog') return 'Свес ' + grp(p.oh) + ', от шкворня до сочленения ' + grp(p.pj) + ', неповоротная тележка в ' + grp(p.jr) + ' за сочленением, задний свес ' + grp(p.rh) + ' (оценка). Скосы — по схеме Довлатова.';
+    return 'Крайние секции по ' + grp(p.oh + p.pj) + ', средняя ' + grp(p.mid) + ' мм, неповоротная тележка в её середине. База ' + grp(Math.round(p.pj + p.mid / 2)) + ' мм. Скосы — по виду сверху трёхсекционного вагона, примерно.';
   }
   function checkDims(id, p) {
-    var k, ohF, ohR;
+    var k, o, t = TYPE[id];
     for (k in p) if (p.hasOwnProperty(k)) {
       if (!isFinite(p[k]) || (CHK[k] ? !(p[k] >= 0) : !(p[k] > 0))) return CHK[k] ? 'Скос — ноль или положительное число.' : 'Размеры должны быть положительными числами.';
       if (p[k] > 40000) return 'Слишком большой размер.';
     }
     if (p.W < 1800 || p.W > 3400) return 'Ширина — от 1 800 до 3 400 мм.';
     if (p.a < 800 || p.a > 3500) return 'База тележки — от 800 до 3 500 мм.';
-    if (id === 'lm68' || id === 'ktm5') { if (p.b >= p.L) return 'База должна быть меньше длины.'; if (p.b < p.a + 1000) return 'База слишком мала.'; }
-    if (id === 'lvs86') { if (p.oh >= p.Ls) return 'Свес должен быть меньше длины секции.'; if (p.Ls - p.oh < p.a + 1000) return 'Слишком маленькое расстояние между тележками.'; }
-    if (id === 'bog' || id === 'vit') { if (p.pj < p.a) return 'Шкворень слишком близко к сочленению.'; }
-    if (id === 'bog' && p.jr < p.a / 2) return 'Неповоротная тележка слишком близко к сочленению.';
-    if (id === 'vit' && p.mid < p.a + 400) return 'Средняя секция короче тележки.';
-    ohF = (id === 'lm68' || id === 'ktm5') ? (p.L - p.b) / 2 : p.oh;
-    ohR = (id === 'lm68' || id === 'ktm5') ? (p.L - p.b) / 2 : (id === 'bog' ? p.rh : p.oh);
-    if (p.fl > ohF - 300 || p.rl > ohR - 300) return 'Скос длиннее свеса: он должен кончаться хотя бы за 300 мм до шкворня.';
+    if (t === 'single') { if (p.b < p.a + 1000) return 'База слишком мала.'; if (p.ohF + p.b > p.L - 500) return 'Свес и база не помещаются в длину кузова.'; }
+    if (t === 'jac') { if (p.oh >= p.Ls) return 'Свес должен быть меньше длины секции.'; if (p.Ls - p.oh < p.a + 1000) return 'Слишком маленькое расстояние между тележками.'; }
+    if (t === 'hang') {
+      if (p.b1 < p.a + 1000 || p.b2 < p.a + 1000) return 'База слишком мала.';
+      if (p.jo < 300) return 'Сочленение должно быть хотя бы в 300 мм за средней тележкой.';
+      if (p.jo > p.b2 - p.a - 300) return 'Сочленение слишком близко к задней тележке.';
+    }
+    if (t === 'bog' || t === 'vit') { if (p.pj < p.a) return 'Шкворень слишком близко к сочленению.'; }
+    if (t === 'bog' && p.jr < p.a / 2) return 'Неповоротная тележка слишком близко к сочленению.';
+    if (t === 'vit' && p.mid < p.a + 400) return 'Средняя секция короче тележки.';
+    o = overhangs(id, p);
+    if (o[0] < 500 || o[1] < 500) return 'Свес слишком мал.';
+    if (p.fl > o[0] - 300 || p.rl > o[1] - 300) return 'Скос длиннее свеса: он должен кончаться хотя бы за 300 мм до шкворня.';
     if (p.fw > p.W / 2 - 300 || p.rw > p.W / 2 - 300) return 'Скос слишком глубокий: торец должен остаться шире 600 мм.';
     return '';
   }
   function makeSpec(id, p) {
-    var m = 0.001, sp = { id: id, W: p.W * m, a: p.a * m, J: [], bog: [], secs: [] }, o, j1, j2, k, n, i, b, xa, xb, sc, hw, out;
-    if (id === 'lm68' || id === 'ktm5') {
-      sp.L = p.L * m; o = (p.L - p.b) / 2 * m;
-      sp.bog = [{ x: o, t: 'P' }, { x: sp.L - o, t: 'P' }];
-    } else if (id === 'lvs86') {
+    var m = 0.001, t = TYPE[id], sp = { id: id, W: p.W * m, a: p.a * m, J: [], bog: [], secs: [] }, j1, j2, k, n, i, b, xa, xb, sc, hw, out;
+    if (t === 'single') {
+      sp.L = p.L * m;
+      sp.bog = [{ x: p.ohF * m, t: 'P' }, { x: (p.ohF + p.b) * m, t: 'P' }];
+    } else if (t === 'jac') {
       sp.J = [p.Ls * m]; sp.L = 2 * p.Ls * m;
       sp.bog = [{ x: p.oh * m, t: 'P' }, { x: p.Ls * m, t: 'P', j: 0 }, { x: sp.L - p.oh * m, t: 'P' }];
-    } else if (id === 'bog') {
+    } else if (t === 'hang') {
+      sp.J = [(p.ohF + p.b1 + p.jo) * m]; sp.L = (p.ohF + p.b1 + p.b2 + p.ohR) * m;
+      sp.bog = [{ x: p.ohF * m, t: 'P' }, { x: (p.ohF + p.b1) * m, t: 'P' }, { x: (p.ohF + p.b1 + p.b2) * m, t: 'P' }];
+    } else if (t === 'bog') {
       j1 = (p.oh + p.pj) * m; sp.J = [j1]; sp.L = j1 + (p.jr + p.rh) * m;
       sp.bog = [{ x: p.oh * m, t: 'P' }, { x: j1 + p.jr * m, t: 'R' }];
     } else {
@@ -579,6 +613,21 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
     if (!o.ok) { o.dl = 0; o.d = sp.d0; }
     return o;
   }
+  /* угол у сочленения: из четырёх углов секций рядом с гармошкой — тот, что дальше всех выступает за рельс */
+  var JQ = { x: 0, y: 0 };
+  function measJoint(sp, tr, P, j, o) {
+    var hw = sp.W / 2, side, q, k, x, se, d, dl, best = -1e9;
+    for (side = -1; side <= 1; side += 2) {
+      for (q = 0; q < 2; q++) {
+        k = j + q; x = q ? sp.secs[k].fa : sp.secs[k].fb;
+        locPt(P.sec[k], x, side * hw, JQ); se = estS(sp, P, x);
+        tr.project(JQ.x, JQ.y, se - 4, se + 4, PJ);
+        d = side * PJ.n - G2; dl = d - sp.d0;
+        if (dl > best) { best = dl; o.x = JQ.x; o.y = JQ.y; o.d = d; o.dl = dl; o.side = side; footOf(o, side); }
+      }
+    }
+    return o;
+  }
   function angDeg(ax, ay, bx, by) { return Math.atan2(ax * by - ay * bx, ax * bx + ay * by) * DEG; }
   function calcAngles(sp, P, o) {
     var i, b, s1, s2;
@@ -606,6 +655,8 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
     this.dl = []; this.tx = [];
     for (i = 0; i < 4; i++) { this.dl.push(new Float32Array(this.N)); this.tx.push(new Float32Array(this.N * 2)); }
     this.vs = new Float32Array(this.N); this.vsLast = 0;
+    this.jd = []; for (i = 0; i < sp.J.length; i++) this.jd.push(new Float32Array(this.N));
+    this.JM = {};
     this.bA = []; for (i = 0; i < sp.bog.length; i++) this.bA.push(0);
     this.jA = []; for (i = 0; i < sp.J.length; i++) this.jA.push(0);
     this.eds = 0.1; this.es0 = -2; nb = Math.ceil((tr.len + 4) / this.eds) + 1; this.enb = nb;
@@ -637,6 +688,7 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
       measCorner(sp, tr, P, ci, c);
       this.dl[ci][i] = c.dl; this.tx[ci][2 * i] = c.x; this.tx[ci][2 * i + 1] = c.y;
     }
+    for (j = 0; j < sp.J.length; j++) { measJoint(sp, tr, P, j, this.JM); this.jd[j][i] = this.JM.dl; }
     for (k = 0; k < sp.secs.length; k++) {
       out = sp.secs[k].out;
       for (j = 0; j < out.length; j++) {
@@ -689,6 +741,13 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
     this.vMax = mx; this.vArg = ix * this.ds;
     this.dmax = Math.max(0.005, mx, this.cMax[0], this.cMax[1], this.cMax[2], this.cMax[3]);
     this.dmin = Math.min(-0.005, this.cMin[0], this.cMin[1], this.cMin[2], this.cMin[3]);
+    this.jMax = []; this.jArg = [];
+    for (c = 0; c < this.jd.length; c++) {
+      mx = -1e9; for (i = 0; i < this.N; i++) if (this.jd[c][i] > mx) mx = this.jd[c][i];
+      for (ix = 0; ix < this.N - 1; ix++) if (this.jd[c][ix] >= mx - tol) break;
+      this.jMax.push(mx); this.jArg.push(ix * this.ds);
+      if (mx > this.dmax) this.dmax = mx;
+    }
     /* граница габаритной полосы в мировых координатах */
     n = 0;
     this.eLx = new Float32Array(this.enb); this.eLy = new Float32Array(this.enb); this.eRx = new Float32Array(this.enb); this.eRy = new Float32Array(this.enb);
@@ -730,8 +789,8 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
   /* ================= состояние ================= */
   var carIdx = 0, trackIdx = 0, RAD = 25, INS = 0, pos = 0, playing = false, speed = 2.8, follow = false, CHAMF = true;
   var params = {}, spec = null, track = null, run = null, need = true, tabsDirty = true;
-  var cur = { P: null, c: [{}, {}, {}, {}], m: {}, A: {} };
-  var LAYDEF = [['lines', 'Линии от углов до рельса', 1], ['labels', 'Подписи расстояний', 1], ['mid', 'Вынос середины (Вс)', 1], ['env', 'Габаритная полоса всего пути', 1], ['trace', 'Следы углов', 1], ['glass', 'Прозрачный кузов (видно тележки)', 1], ['sleep', 'Шпалы', 1], ['axes', 'Оси секций и хорды тележек', 0], ['panel', 'Табличка с цифрами на схеме', 1]];
+  var cur = { P: null, c: [{}, {}, {}, {}], m: {}, A: {}, jn: [] };
+  var LAYDEF = [['lines', 'Линии от углов до рельса', 1], ['labels', 'Подписи расстояний', 1], ['mid', 'Вынос середины (Вс)', 1], ['joints', 'Расстояния у сочленений', 1], ['env', 'Габаритная полоса всего пути', 1], ['trace', 'Следы углов', 1], ['glass', 'Прозрачный кузов (видно тележки)', 1], ['sleep', 'Шпалы', 1], ['axes', 'Оси секций и хорды тележек', 0], ['panel', 'Табличка с цифрами на схеме', 1]];
   var LAY = {};
   var CN = ['Маска слева', 'Маска справа', 'Хвост слева', 'Хвост справа'];
   var CNs = ['маска слева', 'маска справа', 'хвост слева', 'хвост справа'];
@@ -746,6 +805,7 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
     solve(spec, track, run.S0 + pos, cur.P);
     for (i = 0; i < 4; i++) measCorner(spec, track, cur.P, i, cur.c[i]);
     measMid(spec, track, cur.P, cur.m, 0.2);
+    for (i = 0; i < spec.J.length; i++) measJoint(spec, track, cur.P, i, cur.jn[i]);
     calcAngles(spec, cur.P, cur.A);
   }
   function vehCentre(o) {
@@ -884,10 +944,12 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
       c.beginPath(); c.arc(X(VA.x), Y(VA.y), Math.max(2.5, 0.12 * k), 0, TWO_PI); c.fillStyle = pal.ink; c.fill();
     }
     /* кабина: тёмная полоса у маски и стрелка хода */
-    sec = P.sec[0]; out = secs[0].out; cabD = Math.max(0.6, sp.cf ? sp.cf.l + 0.25 : 0);
-    c.beginPath(); locPt(sec, cabD, sp.W / 2, VA); c.moveTo(X(VA.x), Y(VA.y));
-    for (j = 0; j < (sp.cf ? 4 : 2); j++) { locPt(sec, out[j][0], out[j][1], VA); c.lineTo(X(VA.x), Y(VA.y)); }
-    locPt(sec, cabD, -sp.W / 2, VA); c.lineTo(X(VA.x), Y(VA.y)); c.closePath();
+    /* кабина — полоса 0,6 м у маски, по контуру со скосами */
+    sec = P.sec[0]; out = secs[0].out; cabD = 0.6;
+    t = sp.cf && cabD < sp.cf.l ? sp.W / 2 - sp.cf.w * (1 - cabD / sp.cf.l) : sp.W / 2;
+    c.beginPath(); locPt(sec, cabD, t, VA); c.moveTo(X(VA.x), Y(VA.y));
+    for (j = 0; j < (sp.cf ? 4 : 2); j++) { if (out[j][0] > cabD) continue; locPt(sec, out[j][0], out[j][1], VA); c.lineTo(X(VA.x), Y(VA.y)); }
+    locPt(sec, cabD, -t, VA); c.lineTo(X(VA.x), Y(VA.y)); c.closePath();
     c.fillStyle = css(cab, LAY.glass ? 0.75 : 1); c.fill();
     if (k > 3) {
       locPt(sec, cabD + 0.7, 0, VA); locPt(sec, cabD + 1.7, 0.7, VB); locPt(sec, cabD + 1.7, -0.7, VC);
@@ -943,7 +1005,13 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
     }
     m = cur.m;
     if (LAY.mid && m.ok && m.dl > 0.004) midDim(c, X, Y, k, m, LAY.labels);
+    if (LAY.joints) for (i = 0; i < cur.jn.length; i++) {
+      m = cur.jn[i];
+      txt = LAY.labels ? 'сочл. ' + mm(m.d) + ' мм' + (jIsMax(i) ? ' · макс' : '') : null;
+      dimLine(c, X, Y, k, m, colArr(m.dl), false, txt);
+    }
   }
+  function jIsMax(i) { return run && run.done && cur.jn[i].dl > 0.005 && run.jMax[i] >= 0.5 * run.dmax && cur.jn[i].dl >= run.jMax[i] - 0.0005; }
   var MD = { x: 0, y: 0, fx: 0, fy: 0, side: 1, h: 0 };
   function midDim(c, X, Y, k, m, lab) {
     var sn = Math.sin(m.h), cs = Math.cos(m.h), w = m.side * spec.W / 2, sx = m.tx - w * sn, sy = m.ty + w * cs, carr = colArr(m.dl);
@@ -988,7 +1056,9 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
   }
   function curVals() {
     var c = cur.c;
-    return { vp: Math.max(c[0].dl, c[1].dl), vz: Math.max(c[2].dl, c[3].dl), vc: cur.m.ok ? Math.max(0, cur.m.dl) : 0 };
+    var vj = -1e9, i;
+    for (i = 0; i < cur.jn.length; i++) if (cur.jn[i].dl > vj) vj = cur.jn[i].dl;
+    return { vp: Math.max(c[0].dl, c[1].dl), vz: Math.max(c[2].dl, c[3].dl), vc: cur.m.ok ? Math.max(0, cur.m.dl) : 0, vj: cur.jn.length ? vj : null };
   }
   function drawPanel(c, w, pal) {
     var car = CARS[carIdx], fs = w < 560 ? 11 : 12.5, lh = Math.round(fs * 1.55), v = curVals(), segs, i, x, y, wd, tw, pw, head, tail, lines;
@@ -996,7 +1066,9 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
     c.font = 'bold ' + fs + 'px ' + FONT;
     lines = c.measureText(head + ' · ' + tail).width <= w - 90 ? [[head + ' · ' + tail, 1]] : [[head, 1], [tail, 1]];
     lines.push(['пройдено ' + f1(pos) + ' из ' + f1(run.len) + ' м', 0]);
-    segs = [['Вп ', null], [smm(v.vp), v.vp], ['   Вз ', null], [smm(v.vz), v.vz], ['   Вс ', null], [smm(v.vc), v.vc], [' мм', null]];
+    segs = [['Вп ', null], [smm(v.vp), v.vp], ['   Вз ', null], [smm(v.vz), v.vz], ['   Вс ', null], [smm(v.vc), v.vc]];
+    if (v.vj !== null) segs.push(['   сочл. ', null], [smm(v.vj), v.vj]);
+    segs.push([' мм', null]);
     wd = 0;
     for (i = 0; i < lines.length; i++) { c.font = (lines[i][1] ? 'bold ' : '') + fs + 'px ' + FONT; wd = Math.max(wd, c.measureText(lines[i][0]).width); }
     tw = 0; for (i = 0; i < segs.length; i++) { c.font = (segs[i][1] === null ? '' : 'bold ') + fs + 'px ' + FONT; tw += c.measureText(segs[i][0]).width; }
@@ -1165,7 +1237,7 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
   var tabC = false;
   function buildTables() {
     var h = '<tr><th></th><th class="n">до рельса</th><th class="n">вынос</th><th class="n">макс.</th></tr>', i, sp = spec, b, nm;
-    for (i = 0; i < 5; i++) h += '<tr><td><span class="sw" id="tsw' + i + '"></span>' + (i < 4 ? CN[i] : 'Середина (Вс)') + '</td><td class="n" id="tcd' + i + '"></td><td class="n" id="tcl' + i + '"></td><td class="n"><button class="jump" id="tcm' + i + '" data-j="' + i + '" title="Поставить вагон в эту точку">…</button></td></tr>';
+    for (i = 0; i < 5 + sp.J.length; i++) h += '<tr><td><span class="sw" id="tsw' + i + '"></span>' + (i < 4 ? CN[i] : (i === 4 ? 'Середина (Вс)' : 'У сочленения' + (sp.J.length > 1 ? ' ' + (i - 4) : ''))) + '</td><td class="n" id="tcd' + i + '"></td><td class="n" id="tcl' + i + '"></td><td class="n"><button class="jump" id="tcm' + i + '" data-j="' + i + '" title="Поставить вагон в эту точку">…</button></td></tr>';
     $('tab').innerHTML = h;
     h = '<tr><th></th><th class="n">к кузову</th><th class="n">макс.</th></tr>';
     for (i = 0; i < sp.bog.length; i++) {
@@ -1181,12 +1253,12 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
   function updateTables() {
     var i, m, sp = spec, d = run && run.done, a = cur.A, el;
     if (!tabC || !cur.P || !cur.P.ok) return;
-    for (i = 0; i < 5; i++) {
-      m = i < 4 ? cur.c[i] : cur.m;
+    for (i = 0; i < 5 + sp.J.length; i++) {
+      m = i < 4 ? cur.c[i] : (i === 4 ? cur.m : cur.jn[i - 5]);
       $('tsw' + i).style.background = css(colArr(m.dl));
       $('tcd' + i).innerHTML = mm(m.d);
-      $('tcl' + i).innerHTML = smm(i < 4 ? m.dl : Math.max(0, m.dl));
-      $('tcm' + i).innerHTML = d ? smm(i < 4 ? run.cMax[i] : run.vMax) + ' →' : '…';
+      $('tcl' + i).innerHTML = smm(i === 4 ? Math.max(0, m.dl) : m.dl);
+      $('tcm' + i).innerHTML = d ? smm(i < 4 ? run.cMax[i] : (i === 4 ? run.vMax : run.jMax[i - 5])) + ' →' : '…';
     }
     for (i = 0; i < sp.bog.length; i++) {
       if (sp.bog[i].t === 'R') { $('tba' + i).innerHTML = '0° (жёстко)'; $('tbm' + i).innerHTML = '—'; continue; }
@@ -1196,7 +1268,10 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
     for (i = 0; i < sp.J.length; i++) { $('tja' + i).innerHTML = deg(a.j[i]); $('tjm' + i).innerHTML = d ? deg(run.jA[i]) : '…'; }
     if (d) {
       m = 0; for (i = 1; i < 4; i++) if (run.cMax[i] > run.cMax[m]) m = i;
-      el = 'На прямой от каждого угла до рельса ' + mm(spec.d0) + ' мм. Красный — наибольший вынос на этом пути: ' + smm(run.dmax) + ' мм' + (run.vMax > run.cMax[m] ? ' (середина кузова).' : ' (' + CNs[m] + ', до рельса ' + mm(spec.d0 + run.cMax[m]) + ' мм).');
+      el = CNs[m] + ', до рельса ' + mm(spec.d0 + run.cMax[m]) + ' мм'; a = run.cMax[m];
+      if (run.vMax > a) { a = run.vMax; el = 'середина кузова'; }
+      for (i = 0; i < run.jMax.length; i++) if (run.jMax[i] > a) { a = run.jMax[i]; el = 'угол у сочленения' + (run.jMax.length > 1 ? ' ' + (i + 1) : '') + ', до рельса ' + mm(spec.d0 + run.jMax[i]) + ' мм'; }
+      el = 'На прямой от каждого угла до рельса ' + mm(spec.d0) + ' мм. Красный — наибольший вынос на этом пути: ' + smm(run.dmax) + ' мм (' + el + ').';
       m = 0; for (i = 1; i < 4; i++) if (run.cMin[i] < run.cMin[m]) m = i;
       if (spec.d0 + run.cMin[m] < 0) el += ' Внутренний угол уходит за рельс внутрь колеи до ' + mm(-(spec.d0 + run.cMin[m])) + ' мм (' + CNs[m] + ').';
       else if (run.cMin[m] < -0.005) el += ' Ближе всего к рельсу — ' + mm(spec.d0 + run.cMin[m]) + ' мм (' + CNs[m] + ').';
@@ -1204,22 +1279,25 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
     } else $('legnote').innerHTML = 'Считаю максимумы…';
   }
   function buildTicks() {
-    var t = $('ticks'), w = slider.offsetWidth || 300, i, mf, mr, h = '', L = [], el, sp, left, wd, px, fr;
+    var t = $('ticks'), w = slider.offsetWidth || 300, i, j, mf, mr, h = '', L = [], M, G = [], el, sp, left, wd, px;
     if (!run || !run.done) { t.innerHTML = ''; return; }
     px = function (v) { return 13 + (w - 26) * clamp(v / run.len, 0, 1); };
     mf = run.cMax[0] >= run.cMax[1] ? 0 : 1; mr = run.cMax[2] >= run.cMax[3] ? 2 : 3;
     L.push({ v: run.evIn, t: 'вход в кривую', c: '' });
     L.push({ v: run.evOut, t: 'выход из кривой', c: '' });
-    if (run.cMax[mf] > 0.005 && run.cMax[mr] > 0.005 && Math.abs(px(run.cArg[mf]) - px(run.cArg[mr])) < 80) {
-      fr = Math.min(run.cArg[mf], run.cArg[mr]);
-      L.push({ v: fr, t: 'макс. Вп и Вз', c: 'mx r2', v2: Math.max(run.cArg[mf], run.cArg[mr]) });
-    } else {
-      if (run.cMax[mf] > 0.005) L.push({ v: run.cArg[mf], t: 'макс. Вп', c: 'mx r2' });
-      if (run.cMax[mr] > 0.005) L.push({ v: run.cArg[mr], t: 'макс. Вз', c: 'mx r2' });
+    M = [];
+    if (run.cMax[mf] > 0.005) M.push({ v: run.cArg[mf], t: 'Вп' });
+    if (run.cMax[mr] > 0.005) M.push({ v: run.cArg[mr], t: 'Вз' });
+    for (i = 0; i < run.jMax.length; i++) if (run.jMax[i] > 0.02) M.push({ v: run.jArg[i], t: 'у сочл.' + (run.jMax.length > 1 ? ' ' + (i + 1) : '') });
+    M.sort(function (p, q) { return p.v - q.v; });
+    for (i = 0; i < M.length; i++) {
+      if (G.length && px(M[i].v) - px(G[G.length - 1].v) < 90) { G[G.length - 1].t += ', ' + M[i].t; G[G.length - 1].more.push(M[i].v); }
+      else G.push({ v: M[i].v, t: M[i].t, more: [] });
     }
+    for (i = 0; i < G.length; i++) L.push({ v: G[i].v, t: 'макс. ' + G[i].t, c: 'mx r2', more: G[i].more });
     for (i = 0; i < L.length; i++) {
       h += '<span data-v="' + L[i].v + '" class="' + L[i].c + '">' + L[i].t + '</span>';
-      if (L[i].v2 !== undefined) h += '<span data-v="' + L[i].v2 + '" class="mx r2 nl">&#8203;</span>';
+      for (j = 0; L[i].more && j < L[i].more.length; j++) h += '<span data-v="' + L[i].more[j] + '" class="mx r2 nl">&#8203;</span>';
     }
     t.innerHTML = h;
     sp = t.getElementsByTagName('span');
@@ -1230,12 +1308,13 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
     }
   }
   function rebuild(refit) {
-    var frac = run ? pos / run.len : 0, car = CARS[carIdx], t = TRACKS[trackIdx];
+    var frac = run ? pos / run.len : 0, car = CARS[carIdx], t = TRACKS[trackIdx], i;
     spec = makeSpec(car.id, params[car.id]);
     track = buildTrack(t.id, RAD, t.ins ? INS : 0, spec.L + 8);
     run = new Run(spec, track);
     NORM.max = 0.1; NORM.min = -0.1; makeBuckets();
     cur.P = newPose(spec);
+    cur.jn = []; for (i = 0; i < spec.J.length; i++) cur.jn.push({});
     slider.max = String(Math.floor(run.len * 100) / 100);
     buildTables(); carInfo(); trackInfo(); markCars(); markTracks();
     $('ticks').innerHTML = '';
@@ -1253,7 +1332,7 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
   }
   function saveState() {
     store.set('carId', CARS[carIdx].id); store.set('track', trackIdx); store.set('R', RAD); store.set('ins', INS);
-    store.set('lay', JSON.stringify(LAY)); store.set('params', JSON.stringify(params));
+    store.set('lay', JSON.stringify(LAY)); store.set('params2', JSON.stringify(params));
   }
 
   /* ================= картинка ================= */
@@ -1267,7 +1346,7 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
     x.fillStyle = pal.panelLine; x.fillRect(0, CH, CW, 1);
     l1 = car.name + ' · ' + TRACKS[trackIdx].name + ', R = ' + RAD + ' м' + (TRACKS[trackIdx].ins && INS > 0 ? ', вставка ' + num(INS) + ' м' : '') + ' · пройдено ' + f1(pos) + ' м';
     l2 = 'До рельса, мм: маска ' + mm(cc[0].d) + ' / ' + mm(cc[1].d) + ', хвост ' + mm(cc[2].d) + ' / ' + mm(cc[3].d) + ' (лев. / прав.); на прямой ' + mm(spec.d0);
-    l3 = 'Вынос, мм: Вп ' + smm(v.vp) + ', Вз ' + smm(v.vz) + ', Вс ' + smm(v.vc) + (run.done ? ' · максимум на пути ' + smm(run.dmax) : '');
+    l3 = 'Вынос, мм: Вп ' + smm(v.vp) + ', Вз ' + smm(v.vz) + ', Вс ' + smm(v.vc) + (v.vj !== null ? ', у сочленения ' + smm(v.vj) : '') + (run.done ? ' · максимум на пути ' + smm(run.dmax) : '');
     x.textAlign = 'left'; x.textBaseline = 'middle';
     x.font = 'bold 13px ' + FONT; x.fillStyle = pal.ink; x.fillText(l1, 12, CH + 16);
     x.font = '12px ' + FONT; x.fillText(l2, 12, CH + 37); x.fillText(l3, 12, CH + 57);
@@ -1340,7 +1419,7 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
     $('tab').addEventListener('click', function (e) {
       var j = e.target.getAttribute('data-j');
       if (j === null || !run || !run.done) return;
-      setPlaying(false); setPos(+j < 4 ? run.cArg[+j] : run.vArg);
+      setPlaying(false); setPos(+j < 4 ? run.cArg[+j] : (+j === 4 ? run.vArg : run.jArg[+j - 5]));
     });
     $('ticks').addEventListener('click', function (e) {
       var v = e.target.getAttribute('data-v'); if (v === null) return;
@@ -1413,7 +1492,7 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
     readTheme();
     for (i = 0; i < LAYDEF.length; i++) LAY[LAYDEF[i][0]] = !!LAYDEF[i][2];
     v = jget('lay'); if (v) for (k in v) if (v.hasOwnProperty(k) && LAY.hasOwnProperty(k)) LAY[k] = !!v[k];
-    sp = jget('params') || {};
+    sp = jget('params2') || {};
     for (i = 0; i < CARS.length; i++) {
       p = {};
       for (k in CARS[i].def) if (CARS[i].def.hasOwnProperty(k)) p[k] = (sp[CARS[i].id] && typeof sp[CARS[i].id][k] === 'number' && (CHK[k] ? sp[CARS[i].id][k] >= 0 : sp[CARS[i].id][k] > 0)) ? sp[CARS[i].id][k] : CARS[i].def[k];
