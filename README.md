@@ -5,6 +5,7 @@
 - Все материалы: https://valsot.github.io/ukk_get/
 - Тренажёр ЛМ-68М (схема цепей управления с расчётом напряжений и токов): https://valsot.github.io/ukk_get/lm68m/
 - ЛМ-68М, простой режим без схемы: https://valsot.github.io/ukk_get/lm68m/simple.html
+- Заход трамвая в кривую (вынос углов маски и хвоста, разные вагоны и радиусы): https://valsot.github.io/ukk_get/krivaya/
 - Зачёт по ОДТ: https://valsot.github.io/ukk_get/zachet-odt/
 - Зачёт по электрооборудованию: https://valsot.github.io/ukk_get/zachet-eo/
 - Зачёт по охране труда: https://valsot.github.io/ukk_get/zachet-ot/

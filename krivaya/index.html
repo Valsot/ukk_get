@@ -1,0 +1,1399 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Заход трамвая в кривую</title>
+<meta name="description" content="Эмулятор захода трамвая в кривую: ЛМ-68М, ЛВС-86, Богатырь-М, Витязь-М. Расстояния от углов маски и хвоста до рельса, вынос концов и середины кузова, поворотные и неповоротные тележки, габаритная полоса.">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="ru_RU">
+<meta property="og:title" content="Заход трамвая в кривую">
+<meta property="og:description" content="Вынос углов маски и хвоста, середины кузова и габаритная полоса для ЛМ-68М, ЛВС-86, Богатыря-М и Витязя-М на кривых разного радиуса.">
+<style>
+html,body{margin:0;padding:0}
+body{background:#f3f1ea;color:#1d2430;font:14px/1.45 -apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-text-size-adjust:100%}
+h1,h2{margin:0;font-weight:700}
+button,select,input{font:inherit;color:inherit}
+button{-webkit-tap-highlight-color:rgba(0,0,0,0)}
+.top{padding:12px 16px 10px;padding:12px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px));border-bottom:1px solid #d9d4c6;background:#faf8f2}
+.top h1{font-size:20px;letter-spacing:.2px}
+.top p{margin:2px 0 0;color:#5b6472;font-size:13px}
+.top p.kicker{margin:0 0 2px}
+.top p.kicker a{color:#1f5fa8;text-decoration:none}
+.wrap{display:-webkit-box;display:-webkit-flex;display:flex;-webkit-flex-wrap:wrap;flex-wrap:wrap;-webkit-box-align:start;-webkit-align-items:flex-start;align-items:flex-start;padding:12px 16px 28px;padding:12px max(16px,env(safe-area-inset-right,0px)) 28px max(16px,env(safe-area-inset-left,0px))}
+.col{-webkit-box-flex:1;-webkit-flex:1 1 600px;flex:1 1 600px;min-width:0;margin-right:16px}
+.side{-webkit-flex:0 0 350px;flex:0 0 350px;width:350px;min-width:0}
+@media (min-width:1041px){.col{position:-webkit-sticky;position:sticky;top:8px}}
+@media (max-width:1040px){.col{margin-right:0;-webkit-flex-basis:100%;flex-basis:100%}.side{-webkit-flex:1 1 100%;flex:1 1 100%;width:auto;margin-top:14px}}
+.stage{position:relative;height:62vh;min-height:340px;background:#fbfaf6;border:1px solid #d6d0c1;border-radius:10px;overflow:hidden;-ms-touch-action:none;touch-action:none}
+.stage canvas{display:block;width:100%;height:100%;cursor:-webkit-grab;cursor:grab}
+.stage canvas.drag{cursor:-webkit-grabbing;cursor:grabbing}
+.zoom{position:absolute;right:10px;top:10px}
+.zoom button{display:block;width:38px;height:36px;margin:0 0 6px;border:1px solid #cfc8b6;border-radius:8px;background:rgba(255,255,255,.94);font-size:20px;line-height:1;cursor:pointer;padding:0;text-align:center}
+.zoom button svg{display:block;margin:0 auto}
+.zoom button.on{background:#1d2430;color:#fff;border-color:#1d2430}
+.calc{position:absolute;left:50%;bottom:12px;-webkit-transform:translateX(-50%);transform:translateX(-50%);background:#1d2430;color:#fff;border-radius:14px;padding:3px 12px;font-size:12px;display:none}
+.runner{margin-top:10px;background:#faf8f2;border:1px solid #d6d0c1;border-radius:10px;padding:10px 12px 6px}
+.runrow{display:-webkit-box;display:-webkit-flex;display:flex;-webkit-box-align:center;-webkit-align-items:center;align-items:center;-webkit-flex-wrap:wrap;flex-wrap:wrap}
+.runrow button{margin:0 6px 6px 0;min-width:44px;height:36px;border:1px solid #cfc8b6;border-radius:8px;background:#fff;cursor:pointer;padding:0 10px;white-space:nowrap}
+.runrow button.play{min-width:112px;background:#1d2430;color:#fff;border-color:#1d2430;font-weight:600}
+.runrow button.play svg{vertical-align:-2px;margin-right:6px}
+.runrow select{height:36px;margin:0 8px 6px 0;border:1px solid #cfc8b6;border-radius:8px;background:#fff;padding:0 6px}
+.posv{font-weight:700;margin:0 0 6px 4px;white-space:nowrap}
+.posv small{font-weight:400;color:#5b6472}
+@media (max-width:480px){.runrow button{padding:0 8px;min-width:40px}.runrow button.play{min-width:98px}}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:30px;background:transparent;margin:0;padding:0}
+input[type=range]:focus{outline:none}
+input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:4px;background:#d9d3c3}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;margin-top:-9px;border-radius:50%;background:#1d2430;border:3px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.35)}
+input[type=range]::-moz-range-track{height:8px;border-radius:4px;background:#d9d3c3}
+input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#1d2430;border:3px solid #fff}
+.ticks{position:relative;height:34px;font-size:11px;color:#5b6472}
+.ticks span{position:absolute;top:0;white-space:nowrap;cursor:pointer;padding-top:5px;line-height:1.2}
+.ticks span:before{content:"";position:absolute;left:0;top:0;width:2px;height:7px;background:currentColor}
+.ticks span.rt:before{left:auto;right:0}
+.ticks span.r2{top:15px}
+.ticks span.r2:before{height:22px;top:-15px}
+.ticks span.mx{color:#c0392b;font-weight:600}
+.ticks span.nl{width:2px;padding:0;overflow:hidden}
+.box{background:#faf8f2;border:1px solid #d6d0c1;border-radius:10px;padding:10px 12px;margin-bottom:12px}
+.box h2{font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:#5b6472;margin-bottom:8px}
+.cars button{display:block;width:100%;text-align:left;border:1px solid #cfc8b6;background:#fff;border-radius:9px;padding:7px 10px 7px 14px;margin:0 0 6px;cursor:pointer;position:relative}
+.cars button b{display:block;font-size:14px}
+.cars button small{display:block;color:#5b6472;font-size:12px;line-height:1.3}
+.cars button i{position:absolute;left:0;top:7px;bottom:7px;width:5px;border-radius:0 3px 3px 0}
+.cars button.on{border-color:#1d2430;box-shadow:inset 0 0 0 1px #1d2430;background:#fffdf6}
+.seg{display:-webkit-box;display:-webkit-flex;display:flex;-webkit-flex-wrap:wrap;flex-wrap:wrap;margin-right:-6px}
+.seg button{-webkit-box-flex:1;-webkit-flex:1 1 40%;flex:1 1 40%;margin:0 6px 6px 0;height:34px;border:1px solid #cfc8b6;border-radius:8px;background:#fff;cursor:pointer;font-size:13px}
+.seg button.on{background:#1d2430;color:#fff;border-color:#1d2430}
+.row{margin:6px 0}
+.row label{display:block;font-size:13px;color:#3b4350}
+.row label b{float:right}
+.chk label{display:block;margin:4px 0;font-size:13px;cursor:pointer}
+.chk input{margin:0 7px 0 0;vertical-align:-2px}
+table.t{width:100%;border-collapse:collapse;font-size:12.5px}
+table.t th{text-align:left;font-weight:600;color:#5b6472;padding:3px 4px;border-bottom:1px solid #ddd6c6;font-size:11.5px}
+table.t th.n,table.t td.n{text-align:right;white-space:nowrap}
+table.t td{padding:4px;border-bottom:1px solid #ece7da;vertical-align:middle}
+table.t .sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px;background:#2e9d48}
+.jump{border:1px solid #cfc8b6;background:#fff;border-radius:6px;padding:1px 6px;font-size:12px;cursor:pointer;white-space:nowrap}
+.note{font-size:12px;color:#5b6472;margin-top:6px}
+.warn{color:#c0392b;font-weight:600}
+.dims{display:none;margin-top:6px}
+.dims.open{display:block}
+.dims .row{display:-webkit-box;display:-webkit-flex;display:flex;-webkit-box-align:center;-webkit-align-items:center;align-items:center}
+.dims .row span{-webkit-box-flex:1;-webkit-flex:1;flex:1;font-size:12.5px;padding-right:8px}
+.dims input{width:92px;height:30px;border:1px solid #cfc8b6;border-radius:6px;padding:0 6px;text-align:right;background:#fff}
+.lnk{border:0;background:none;color:#1f5fa8;cursor:pointer;padding:0;font-size:13px;text-decoration:underline;margin-top:4px}
+.big{width:100%;height:40px;border:1px solid #1d2430;border-radius:9px;background:#1d2430;color:#fff;font-weight:600;cursor:pointer}
+details{font-size:13px}
+details summary{cursor:pointer;font-weight:600}
+details p{margin:6px 0}
+.legend{display:-webkit-box;display:-webkit-flex;display:flex;-webkit-box-align:center;-webkit-align-items:center;align-items:center;font-size:11.5px;margin:8px 0 2px;color:#5b6472}
+.legend .bar{-webkit-box-flex:1;-webkit-flex:1;flex:1;height:10px;border-radius:5px;margin:0 6px;background:-webkit-linear-gradient(left,#3b5fd0,#21a6b8,#2e9d48,#e8b62c,#e0332f);background:linear-gradient(90deg,#3b5fd0,#21a6b8,#2e9d48,#e8b62c,#e0332f)}
+.shot{position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(10,12,16,.84);z-index:50;overflow:auto;-webkit-overflow-scrolling:touch;text-align:center;padding:16px}
+.shot img{max-width:100%;height:auto;border-radius:8px;box-shadow:0 4px 30px rgba(0,0,0,.5)}
+.shot p{color:#fff;margin:4px 0 12px;font-size:14px}
+.shot button{height:38px;padding:0 18px;border-radius:9px;border:0;background:#fff;color:#1d2430;font-weight:600;cursor:pointer;margin-bottom:12px}
+@media (prefers-color-scheme:dark){
+body{background:#12161d;color:#e4e8ee}
+.top{background:#171c24;border-color:#2a313d}.top p{color:#9aa4b2}
+.stage{background:#161b22;border-color:#2a313d}
+.zoom button{background:rgba(30,36,46,.94);border-color:#3a4352;color:#e4e8ee}
+.zoom button.on{background:#e4e8ee;color:#12161d;border-color:#e4e8ee}
+.runner,.box{background:#171c24;border-color:#2a313d}
+.runrow button,.runrow select,.cars button,.seg button,.jump,.dims input{background:#1e242e;border-color:#3a4352;color:#e4e8ee}
+.runrow button.play,.seg button.on{background:#e4e8ee;color:#12161d;border-color:#e4e8ee}
+.cars button.on{background:#222a36;border-color:#e4e8ee;box-shadow:inset 0 0 0 1px #e4e8ee}
+.cars button small,.box h2,.note,table.t th,.ticks,.legend,.posv small{color:#9aa4b2}
+.ticks span.mx,.warn{color:#ff7b6b}
+.row label{color:#c9d0da}
+table.t th{border-color:#2f3744}table.t td{border-color:#252c37}
+input[type=range]::-webkit-slider-runnable-track{background:#2f3744}
+input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
+.big{background:#e4e8ee;color:#12161d;border-color:#e4e8ee}
+.lnk{color:#7fb2ff}
+.top p.kicker a{color:#7fb2ff}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <p class="kicker"><a href="https://valsot.github.io/ukk_get/">УКК ГЭТ</a> · электроснабжение</p>
+  <h1>Заход трамвая в кривую</h1>
+  <p>Расстояния от углов маски и хвоста до рельса, вынос концов и середины кузова, габаритная полоса — для разных вагонов и радиусов</p>
+</header>
+<div class="wrap">
+  <div class="col">
+    <div class="stage" id="stage">
+      <canvas id="cv" aria-label="Схема: путь и вагон, вид сверху"></canvas>
+      <div class="calc" id="calc">считаю вынос по всему пути…</div>
+      <div class="zoom">
+        <button id="zin" title="Приблизить" aria-label="Приблизить">+</button>
+        <button id="zout" title="Отдалить" aria-label="Отдалить">&#8722;</button>
+        <button id="zfit" title="Показать весь путь" aria-label="Показать весь путь"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 6V2h4M12 2h4v4M16 12v4h-4M6 16H2v-4"/></svg></button>
+        <button id="zfol" title="Следить за вагоном" aria-label="Следить за вагоном"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="9" r="6"/><circle cx="9" cy="9" r="1.8" fill="currentColor"/><path d="M9 0v3M9 15v3M0 9h3M15 9h3"/></svg></button>
+      </div>
+    </div>
+    <div class="runner">
+      <div class="runrow">
+        <button id="bm1" title="Назад на 1 м">&#8722;1 м</button>
+        <button id="bm01" title="Назад на 0,1 м">&#8722;0,1</button>
+        <button id="bplay" class="play"></button>
+        <button id="bp01" title="Вперёд на 0,1 м">+0,1</button>
+        <button id="bp1" title="Вперёд на 1 м">+1 м</button>
+        <select id="spd" title="Скорость движения">
+          <option value="0.7">2,5 км/ч</option>
+          <option value="1.4">5 км/ч</option>
+          <option value="2.8" selected>10 км/ч</option>
+          <option value="5.6">20 км/ч</option>
+        </select>
+        <span class="posv" id="posv">0,0 м</span>
+      </div>
+      <input type="range" id="pos" min="0" max="100" step="0.01" value="0" aria-label="Положение вагона на пути">
+      <div class="ticks" id="ticks"></div>
+    </div>
+  </div>
+  <aside class="side">
+    <div class="box">
+      <h2>Вагон</h2>
+      <div class="cars" id="cars"></div>
+      <div id="carinfo" class="note"></div>
+      <button class="lnk" id="dimsbtn">Изменить размеры</button>
+      <div class="dims" id="dims"></div>
+    </div>
+    <div class="box">
+      <h2>Путь</h2>
+      <div class="seg" id="tracks"></div>
+      <div class="row"><label for="rad">Радиус кривой <b id="radv">25 м</b></label><input type="range" id="rad" min="14" max="60" step="1" value="25"></div>
+      <div class="row" id="insrow"><label for="ins">Прямая вставка между кривыми <b id="insv">0 м</b></label><input type="range" id="ins" min="0" max="20" step="0.5" value="0"></div>
+      <div class="note" id="trackinfo"></div>
+    </div>
+    <div class="box">
+      <h2>Вынос, мм</h2>
+      <table class="t" id="tab"></table>
+      <div class="legend"><span>ближе к рельсу</span><span class="bar"></span><span>дальше</span></div>
+      <div class="note" id="legnote"></div>
+    </div>
+    <div class="box">
+      <h2>Тележки и сочленения</h2>
+      <table class="t" id="tab2"></table>
+    </div>
+    <div class="box">
+      <h2>Показать</h2>
+      <div class="chk" id="layers"></div>
+    </div>
+    <div class="box">
+      <button class="big" id="png">Сохранить картинку (PNG)</button>
+      <div class="note">Останови вагон бегунком в нужной точке — в картинку попадут схема, линии с расстояниями и подпись с цифрами.</div>
+    </div>
+    <div class="box">
+      <details>
+        <summary>Как это считается</summary>
+        <p>Вид сверху. Колёсные пары стоят на оси пути, шкворень тележки — посередине между её осями (в кривой он чуть смещён внутрь, на a²/8R). Кузов на двух поворотных тележках проходит через оба шкворня. Неповоротная тележка жёстко держит свою секцию: секция смотрит туда же, куда тележка. Секции соединены шарнирами сочленений. Положение вагона считается точно, без формул-приближений.</p>
+        <p><b>Расстояние до рельса</b> — от угла кузова до рабочей грани рельса своей стороны (колея 1524 мм), по перпендикуляру к оси пути. На прямой у всех углов оно одинаковое: (ширина кузова − 1524) / 2. Минус — угол навис над колеёй, внутрь от рельса.</p>
+        <p><b>Вынос</b> — насколько угол ушёл от рельса по сравнению с прямой. <b>Вп</b> и <b>Вз</b> — вынос маски и хвоста; при заходе и выходе они разные (Вп ≠ Вз): нос уже в кривой, хвост ещё на прямой. <b>Вс</b> — вынос середины кузова внутрь кривой; на схеме он отложен от пунктира, где была бы боковина на прямой.</p>
+        <p>Цвет линии: зелёный — как на прямой; через жёлтый к красному — угол дальше от рельса; красный — максимальный вынос на выбранном пути; голубой и синий — угол ближе к рельсу.</p>
+        <p>Для одиночного вагона на круговой кривой примерно: Вс ≈ b²/8R, вынос концов ≈ (L² − b²)/8R, где L — длина, b — база, R — радиус.</p>
+        <p>Размеры взяты из открытых источников. Задний свес Богатыря-М — оценка по общей длине; точных схем Довлатова и Достоевского нет, они показаны по схемам Богатыря-М и Витязя-М. Любой размер можно поменять.</p>
+      </details>
+    </div>
+  </aside>
+</div>
+<noscript><p style="padding:16px">Для работы нужен JavaScript.</p></noscript>
+<script>
+(function () {
+  'use strict';
+
+  /* ================= константы и утилиты ================= */
+  var GA = 1.524, G2 = GA / 2, TWO_PI = Math.PI * 2, DEG = 180 / Math.PI;
+  var NB = ' ', MINUS = '−';
+  var MP = 3.2;        // междупутье на разворотном кольце, м
+  var GAP = 0.3;       // зазор между секциями (гармошка), м
+  var FONT = '-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
+
+  function $(id) { return document.getElementById(id); }
+  function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
+  function hyp(x, y) { return Math.sqrt(x * x + y * y); }
+  function grp(n) {
+    var s = String(Math.abs(n)), out = '';
+    while (s.length > 3) { out = NB + s.slice(-3) + out; s = s.slice(0, -3); }
+    return (n < 0 ? MINUS : '') + s + out;
+  }
+  function mmi(v) { return Math.round(v * 1000); }
+  function mm(v) { return grp(mmi(v)); }
+  function smm(v) { var r = mmi(v); return (r > 0 ? '+' : '') + grp(r); }
+  function f1(v) { return v.toFixed(1).replace('.', ','); }
+  function num(v) { return String(v).replace('.', ','); }
+  function now() { return (window.performance && window.performance.now) ? window.performance.now() : new Date().getTime(); }
+  var store = {
+    get: function (k) { try { return window.localStorage.getItem('tramcurve.' + k); } catch (e) { return null; } },
+    set: function (k, v) { try { window.localStorage.setItem('tramcurve.' + k, String(v)); } catch (e) { /* хранилище недоступно */ } }
+  };
+  function jget(k) { var v = store.get(k); if (!v) return null; try { return JSON.parse(v); } catch (e) { return null; } }
+
+  /* ================= путь: прямые и круговые кривые ================= */
+  function Track(list) {
+    var x = 0, y = 0, h = 0, s = 0, i, g, len, dir, R, th, cx, cy;
+    this.segs = [];
+    for (i = 0; i < list.length; i++) {
+      g = list[i];
+      if (g.t === 'L') {
+        len = g.len;
+        if (!(len > 0)) continue;
+        this.segs.push({ t: 'L', s0: s, len: len, x0: x, y0: y, h0: h, c: Math.cos(h), sn: Math.sin(h), dir: 0 });
+        x += len * Math.cos(h); y += len * Math.sin(h);
+      } else {
+        dir = g.ang > 0 ? 1 : -1; R = g.R; th = Math.abs(g.ang) * Math.PI / 180; len = R * th;
+        cx = x - dir * R * Math.sin(h); cy = y + dir * R * Math.cos(h);
+        this.segs.push({ t: 'A', s0: s, len: len, x0: x, y0: y, h0: h, R: R, dir: dir, cx: cx, cy: cy, th: th });
+        h += dir * th;
+        x = cx + dir * R * Math.sin(h); y = cy - dir * R * Math.cos(h);
+      }
+      s += len;
+    }
+    this.len = s; this.xe = x; this.ye = y; this.he = h;
+    this.arcs = [];
+    for (i = 0; i < this.segs.length; i++) if (this.segs[i].t === 'A') this.arcs.push(this.segs[i]);
+  }
+  Track.prototype.seg = function (s) {
+    var a = 0, b = this.segs.length - 1, m;
+    while (a < b) { m = (a + b + 1) >> 1; if (this.segs[m].s0 <= s) a = m; else b = m - 1; }
+    return this.segs[a];
+  };
+  Track.prototype.at = function (s, o) {
+    var g, d, h;
+    if (s <= 0) { g = this.segs[0]; o.x = g.x0 + s * Math.cos(g.h0); o.y = g.y0 + s * Math.sin(g.h0); o.h = g.h0; o.k = 0; return o; }
+    if (s >= this.len) { d = s - this.len; o.x = this.xe + d * Math.cos(this.he); o.y = this.ye + d * Math.sin(this.he); o.h = this.he; o.k = 0; return o; }
+    g = this.seg(s); d = s - g.s0;
+    if (g.t === 'L') { o.x = g.x0 + d * g.c; o.y = g.y0 + d * g.sn; o.h = g.h0; o.k = 0; return o; }
+    h = g.h0 + g.dir * d / g.R;
+    o.x = g.cx + g.dir * g.R * Math.sin(h); o.y = g.cy - g.dir * g.R * Math.cos(h); o.h = h; o.k = g.dir / g.R;
+    return o;
+  };
+  var PR = { d: 0, s: 0 };
+  function lineCand(x0, y0, h0, s0, a, b, px, py) {
+    var c = Math.cos(h0), sn = Math.sin(h0), t = s0 + (px - x0) * c + (py - y0) * sn, dx, dy, d;
+    if (t < a) t = a; else if (t > b) t = b;
+    dx = x0 + (t - s0) * c - px; dy = y0 + (t - s0) * sn - py; d = dx * dx + dy * dy;
+    if (d < PR.d) { PR.d = d; PR.s = t; }
+  }
+  function arcCand(g, s, px, py) {
+    var h = g.h0 + g.dir * (s - g.s0) / g.R, dx = g.cx + g.dir * g.R * Math.sin(h) - px, dy = g.cy - g.dir * g.R * Math.cos(h) - py, d = dx * dx + dy * dy;
+    if (d < PR.d) { PR.d = d; PR.s = s; }
+  }
+  /* ближайшая точка оси пути на участке [lo, hi]: станция s, точка, курс и смещение n (влево +) */
+  Track.prototype.project = function (px, py, lo, hi, o) {
+    var segs = this.segs, i, g, a, b, t, s, g0 = segs[0];
+    PR.d = Infinity; PR.s = lo;
+    if (lo < 0) { b = Math.min(hi, 0); if (b >= lo) lineCand(g0.x0, g0.y0, g0.h0, 0, lo, b, px, py); }
+    if (hi > this.len) { a = Math.max(lo, this.len); if (hi >= a) lineCand(this.xe, this.ye, this.he, this.len, a, hi, px, py); }
+    for (i = 0; i < segs.length; i++) {
+      g = segs[i]; a = Math.max(lo, g.s0); b = Math.min(hi, g.s0 + g.len);
+      if (b < a) continue;
+      if (g.t === 'L') { lineCand(g.x0, g.y0, g.h0, g.s0, a, b, px, py); continue; }
+      t = g.dir * (Math.atan2(py - g.cy, px - g.cx) - g.h0) + Math.PI / 2;
+      t -= TWO_PI * Math.floor(t / TWO_PI);
+      s = g.s0 + t * g.R;
+      if (s >= a && s <= b) arcCand(g, s, px, py);
+      else { arcCand(g, a, px, py); arcCand(g, b, px, py); }
+    }
+    this.at(PR.s, o);
+    o.s = PR.s;
+    o.n = (px - o.x) * -Math.sin(o.h) + (py - o.y) * Math.cos(o.h);
+    return o;
+  };
+  /* с какой стороны внутренняя сторона ближайшей кривой: +1 слева, −1 справа */
+  Track.prototype.inSide = function (s) {
+    var A = this.arcs, i, g, d, best = Infinity, dir = 0;
+    for (i = 0; i < A.length; i++) {
+      g = A[i];
+      d = s < g.s0 ? g.s0 - s : (s > g.s0 + g.len ? s - g.s0 - g.len : 0);
+      if (d < best) { best = d; dir = g.dir; }
+    }
+    return dir;
+  };
+
+  var TRACKS = [
+    { id: 'loop', name: 'Разворотное кольцо', ins: true },
+    { id: 't90', name: 'Поворот 90°', ins: false },
+    { id: 'u180', name: 'Разворот 180°', ins: false },
+    { id: 's', name: 'S-кривая', ins: true }
+  ];
+  function loopAlpha(R, d) {
+    var lo = 0, hi = Math.PI / 2, m, i;
+    for (i = 0; i < 60; i++) { m = (lo + hi) / 2; if (R * (2 * Math.cos(m) - 1) - d * Math.sin(m) - MP / 2 > 0) lo = m; else hi = m; }
+    return (lo + hi) / 2;
+  }
+  function buildTrack(id, R, ins, E) {
+    var l = [{ t: 'L', len: E }], a = 0, tr;
+    if (id === 'loop') {
+      a = loopAlpha(R, ins) * DEG;
+      l.push({ t: 'A', R: R, ang: -a });
+      l.push({ t: 'L', len: ins });
+      l.push({ t: 'A', R: R, ang: 180 + 2 * a });
+      l.push({ t: 'L', len: ins });
+      l.push({ t: 'A', R: R, ang: -a });
+    } else if (id === 't90') {
+      l.push({ t: 'A', R: R, ang: 90 });
+    } else if (id === 'u180') {
+      l.push({ t: 'A', R: R, ang: 180 });
+    } else {
+      l.push({ t: 'A', R: R, ang: 45 });
+      l.push({ t: 'L', len: ins });
+      l.push({ t: 'A', R: R, ang: -45 });
+    }
+    l.push({ t: 'L', len: E });
+    tr = new Track(l);
+    tr.alpha = a;
+    return tr;
+  }
+
+  /* ================= вагоны ================= */
+  var CARS = [
+    { id: 'lm68', name: 'ЛМ-68М', sub: 'одновагонный · 2 поворотные тележки', col: '#c8423b',
+      def: { L: 15000, b: 7500, W: 2550, a: 1940 },
+      f: [['L', 'Длина кузова'], ['b', 'База (шкворень — шкворень)'], ['W', 'Ширина кузова'], ['a', 'База тележки']] },
+    { id: 'lvs86', name: 'ЛВС-86', sub: '2 секции · 3 поворотные тележки, средняя под сочленением', col: '#d9822b',
+      def: { Ls: 11250, oh: 3750, W: 2550, a: 1940 },
+      f: [['Ls', 'Длина секции'], ['oh', 'Свес (торец — шкворень)'], ['W', 'Ширина кузова'], ['a', 'База тележки']] },
+    { id: 'bog', name: 'Богатырь-М / Довлатов', sub: '2 секции · поворотная + неповоротная тележка', col: '#2f8a76',
+      def: { oh: 4756, pj: 6614, jr: 2380, rh: 5655, W: 2500, a: 1800 },
+      f: [['oh', 'Передний свес (торец — шкворень)'], ['pj', 'Шкворень — сочленение'], ['jr', 'Сочленение — неповоротная тележка'], ['rh', 'Задний свес (от неповоротной тележки)'], ['W', 'Ширина кузова'], ['a', 'База тележки']] },
+    { id: 'vit', name: 'Невский / Витязь-М / Достоевский', sub: '3 секции · 2 поворотные + неповоротная в средней', col: '#3d68b8',
+      def: { oh: 4756, pj: 6614, mid: 4760, W: 2500, a: 1800 },
+      f: [['oh', 'Свес (торец — шкворень)'], ['pj', 'Шкворень — сочленение'], ['mid', 'Длина средней секции'], ['W', 'Ширина кузова'], ['a', 'База тележки']] }
+  ];
+  function carNote(id, p) {
+    if (id === 'lm68') return 'База ' + grp(p.b) + ', свесы по ' + grp(Math.round((p.L - p.b) / 2)) + ' мм. Ширина по паспорту 2 550 (в задании округлено до 2,6 м).';
+    if (id === 'lvs86') return 'Две секции по ' + grp(p.Ls) + ' мм. Средняя тележка — под сочленением, до крайних по ' + grp(p.Ls - p.oh) + ' мм.';
+    if (id === 'bog') return 'Свес ' + grp(p.oh) + ', от шкворня до сочленения ' + grp(p.pj) + ', неповоротная тележка в ' + grp(p.jr) + ' за сочленением, задний свес ' + grp(p.rh) + ' (оценка). Схемы Довлатова нет — показан Богатырь-М.';
+    return 'Крайние секции по ' + grp(p.oh + p.pj) + ', средняя ' + grp(p.mid) + ' мм, неповоротная тележка в её середине. База ' + grp(Math.round(p.pj + p.mid / 2)) + ' мм. У Достоевского длина около 26 950 — показан Витязь-М.';
+  }
+  function checkDims(id, p) {
+    var k;
+    for (k in p) if (p.hasOwnProperty(k)) { if (!(p[k] > 0) || !isFinite(p[k])) return 'Размеры должны быть положительными числами.'; if (p[k] > 40000) return 'Слишком большой размер.'; }
+    if (p.W < 1800 || p.W > 3400) return 'Ширина — от 1 800 до 3 400 мм.';
+    if (p.a < 800 || p.a > 3500) return 'База тележки — от 800 до 3 500 мм.';
+    if (id === 'lm68') { if (p.b >= p.L) return 'База должна быть меньше длины.'; if (p.b < p.a + 1000) return 'База слишком мала.'; }
+    if (id === 'lvs86') { if (p.oh >= p.Ls) return 'Свес должен быть меньше длины секции.'; if (p.Ls - p.oh < p.a + 1000) return 'Слишком маленькое расстояние между тележками.'; }
+    if (id === 'bog' || id === 'vit') { if (p.pj < p.a) return 'Шкворень слишком близко к сочленению.'; }
+    if (id === 'bog' && p.jr < p.a / 2) return 'Неповоротная тележка слишком близко к сочленению.';
+    if (id === 'vit' && p.mid < p.a + 400) return 'Средняя секция короче тележки.';
+    return '';
+  }
+  function makeSpec(id, p) {
+    var m = 0.001, sp = { id: id, W: p.W * m, a: p.a * m, J: [], bog: [], secs: [] }, o, j1, j2, k, n, i, b, xa, xb;
+    if (id === 'lm68') {
+      sp.L = p.L * m; o = (p.L - p.b) / 2 * m;
+      sp.bog = [{ x: o, t: 'P' }, { x: sp.L - o, t: 'P' }];
+    } else if (id === 'lvs86') {
+      sp.J = [p.Ls * m]; sp.L = 2 * p.Ls * m;
+      sp.bog = [{ x: p.oh * m, t: 'P' }, { x: p.Ls * m, t: 'P', j: 0 }, { x: sp.L - p.oh * m, t: 'P' }];
+    } else if (id === 'bog') {
+      j1 = (p.oh + p.pj) * m; sp.J = [j1]; sp.L = j1 + (p.jr + p.rh) * m;
+      sp.bog = [{ x: p.oh * m, t: 'P' }, { x: j1 + p.jr * m, t: 'R' }];
+    } else {
+      j1 = (p.oh + p.pj) * m; j2 = j1 + p.mid * m; sp.J = [j1, j2]; sp.L = j2 + j1;
+      sp.bog = [{ x: p.oh * m, t: 'P' }, { x: j1 + p.mid * m / 2, t: 'R' }, { x: j2 + p.pj * m, t: 'P' }];
+    }
+    n = sp.J.length + 1;
+    for (k = 0; k < n; k++) {
+      xa = k === 0 ? 0 : sp.J[k - 1]; xb = k === n - 1 ? sp.L : sp.J[k];
+      sp.secs.push({ xa: xa, xb: xb, fa: k === 0 ? 0 : xa + GAP / 2, fb: k === n - 1 ? sp.L : xb - GAP / 2 });
+    }
+    for (i = 0; i < sp.bog.length; i++) {
+      b = sp.bog[i]; b.sec2 = -1;
+      if (b.j !== undefined) { b.sec = b.j; b.sec2 = b.j + 1; }
+      else for (k = 0; k < n; k++) if (b.x > sp.secs[k].xa && b.x < sp.secs[k].xb) { b.sec = k; break; }
+    }
+    sp.x1 = sp.bog[0].x; sp.xN = sp.bog[sp.bog.length - 1].x;
+    sp.d0 = sp.W / 2 - G2;
+    return sp;
+  }
+
+  /* ================= кинематика ================= */
+  var TA = { x: 0, y: 0, h: 0, k: 0 }, TB = { x: 0, y: 0, h: 0, k: 0 };
+  /* тележка на станции s: оси стоят на оси пути, центр (шкворень) — середина хорды */
+  function chord(tr, s, a, o) {
+    tr.at(s + a / 2, TA); tr.at(s - a / 2, TB);
+    var dx = TA.x - TB.x, dy = TA.y - TB.y, l = hyp(dx, dy);
+    o.s = s; o.x = (TA.x + TB.x) / 2; o.y = (TA.y + TB.y) / 2; o.ux = dx / l; o.uy = dy / l;
+    o.fx = TA.x; o.fy = TA.y; o.rx = TB.x; o.ry = TB.y;
+    return o;
+  }
+  function cpB(d, s) { d.s = s.s; d.x = s.x; d.y = s.y; d.ux = s.ux; d.uy = s.uy; d.fx = s.fx; d.fy = s.fy; d.rx = s.rx; d.ry = s.ry; }
+  function newPose(sp) {
+    var P = { sec: [], bog: [], ok: true }, i;
+    for (i = 0; i < sp.secs.length; i++) P.sec.push({ xr: 0, px: 0, py: 0, ux: 1, uy: 0 });
+    for (i = 0; i < sp.bog.length; i++) P.bog.push({ s: 0, x: 0, y: 0, ux: 1, uy: 0, fx: 0, fy: 0, rx: 0, ry: 0 });
+    return P;
+  }
+  function setSec(o, xr, px, py, ux, uy) { o.xr = xr; o.px = px; o.py = py; o.ux = ux; o.uy = uy; }
+  function secPt(o, x, out) { var t = o.xr - x; out.x = o.px + t * o.ux; out.y = o.py + t * o.uy; return out; }
+  function sidePt(o, x, side, W, out) {
+    var t = o.xr - x, w = side * W / 2;
+    out.x = o.px + t * o.ux - w * o.uy; out.y = o.py + t * o.uy + w * o.ux;
+    return out;
+  }
+  var CB = { s: 0, x: 0, y: 0, ux: 1, uy: 0, fx: 0, fy: 0, rx: 0, ry: 0 };
+  /* положение всего вагона, если передняя тележка стоит на станции sf.
+     Идём от головы к хвосту: секция с двумя опорами проходит через них;
+     секция с неповоротной тележкой повёрнута как тележка; секции связаны шарнирами. */
+  function solve(sp, tr, sf, P) {
+    var bog = sp.bog, secs = sp.secs, n = secs.length, a = sp.a;
+    var Ax, Ay, Axp, As, k = 0, i, nb, rb, d, e, lo, hi, m, it, ux, uy, l, jx, jy, xb;
+    chord(tr, sf, a, CB); cpB(P.bog[0], CB);
+    Ax = CB.x; Ay = CB.y; Axp = bog[0].x; As = sf;
+    P.ok = true;
+    while (k < n) {
+      nb = -1;
+      for (i = 1; i < bog.length; i++) {
+        if (bog[i].t === 'P' && bog[i].x > Axp + 1e-6 && bog[i].x <= secs[k].xb + 1e-6) { nb = i; break; }
+      }
+      if (nb >= 0) {
+        d = bog[nb].x - Axp; lo = As - 2 * d - 2; hi = As;
+        for (it = 0; it < 46; it++) {
+          m = (lo + hi) / 2; chord(tr, m, a, CB);
+          if (hyp(CB.x - Ax, CB.y - Ay) > d) lo = m; else hi = m;
+        }
+        chord(tr, (lo + hi) / 2, a, CB); cpB(P.bog[nb], CB);
+        ux = Ax - CB.x; uy = Ay - CB.y; l = hyp(ux, uy); ux /= l; uy /= l;
+        setSec(P.sec[k], Axp, Ax, Ay, ux, uy);
+        if (k === n - 1) break;
+        xb = secs[k].xb;
+        if (bog[nb].j === k) { Ax = CB.x; Ay = CB.y; As = CB.s; }
+        else { As = As - (xb - Axp); Ax = Ax + (Axp - xb) * ux; Ay = Ay + (Axp - xb) * uy; }
+        Axp = xb; k++;
+      } else {
+        rb = -1;
+        if (k + 1 < n) for (i = 1; i < bog.length; i++) if (bog[i].t === 'R' && bog[i].sec === k + 1) { rb = i; break; }
+        if (rb < 0) { P.ok = false; return P; }
+        xb = secs[k].xb; e = bog[rb].x - xb; d = xb - Axp;
+        lo = As - e - 2 * d - 2; hi = As - e;
+        for (it = 0; it < 46; it++) {
+          m = (lo + hi) / 2; chord(tr, m, a, CB);
+          jx = CB.x + e * CB.ux; jy = CB.y + e * CB.uy;
+          if (hyp(jx - Ax, jy - Ay) > d) lo = m; else hi = m;
+        }
+        chord(tr, (lo + hi) / 2, a, CB); cpB(P.bog[rb], CB);
+        jx = CB.x + e * CB.ux; jy = CB.y + e * CB.uy;
+        ux = Ax - jx; uy = Ay - jy; l = hyp(ux, uy); ux /= l; uy /= l;
+        setSec(P.sec[k], Axp, Ax, Ay, ux, uy);
+        setSec(P.sec[k + 1], bog[rb].x, CB.x, CB.y, CB.ux, CB.uy);
+        if (k + 1 === n - 1) break;
+        xb = secs[k + 1].xb;
+        Ax = CB.x + (bog[rb].x - xb) * CB.ux; Ay = CB.y + (bog[rb].x - xb) * CB.uy;
+        As = CB.s - (xb - bog[rb].x); Axp = xb; k += 2;
+      }
+    }
+    return P;
+  }
+
+  /* ================= измерения ================= */
+  var PJ = { x: 0, y: 0, h: 0, k: 0, s: 0, n: 0 }, Q = { x: 0, y: 0 };
+  function estS(sp, P, x) {
+    var b = sp.bog, i, n = b.length;
+    if (x <= b[0].x) return P.bog[0].s + (b[0].x - x);
+    if (x >= b[n - 1].x) return P.bog[n - 1].s - (x - b[n - 1].x);
+    for (i = 0; i < n - 1; i++) if (x <= b[i + 1].x) return P.bog[i].s + (x - b[i].x) / (b[i + 1].x - b[i].x) * (P.bog[i + 1].s - P.bog[i].s);
+    return P.bog[n - 1].s;
+  }
+  function footOf(o, side) {
+    o.fx = PJ.x - side * G2 * Math.sin(PJ.h); o.fy = PJ.y + side * G2 * Math.cos(PJ.h); o.h = PJ.h; o.s = PJ.s; o.tx = PJ.x; o.ty = PJ.y;
+  }
+  /* углы: 0 — маска слева, 1 — маска справа, 2 — хвост слева, 3 — хвост справа (по ходу движения) */
+  function measCorner(sp, tr, P, ci, o) {
+    var last = sp.secs.length - 1, sec = ci < 2 ? P.sec[0] : P.sec[last], x = ci < 2 ? 0 : sp.L, side = (ci & 1) ? -1 : 1, se;
+    sidePt(sec, x, side, sp.W, o);
+    se = estS(sp, P, x);
+    tr.project(o.x, o.y, se - 4, se + 4, PJ);
+    o.side = side; o.d = side * PJ.n - G2; o.dl = o.d - sp.d0;
+    footOf(o, side);
+    return o;
+  }
+  /* вынос середины внутрь кривой: точки боковины между крайними опорами со стороны центра кривой */
+  function measMid(sp, tr, P, o, step) {
+    var secs = sp.secs, k, x0, x1, ns, j, x, side, se, d, dl, best = -1e9;
+    o.ok = false;
+    for (k = 0; k < secs.length; k++) {
+      x0 = Math.max(secs[k].fa, sp.x1); x1 = Math.min(secs[k].fb, sp.xN);
+      if (x1 <= x0) continue;
+      ns = Math.max(1, Math.ceil((x1 - x0) / step));
+      for (j = 0; j <= ns; j++) {
+        x = x0 + (x1 - x0) * j / ns; se = estS(sp, P, x);
+        side = tr.inSide(se);
+        if (!side) continue;
+        sidePt(P.sec[k], x, side, sp.W, Q);
+        tr.project(Q.x, Q.y, se - 4, se + 4, PJ);
+        d = side * PJ.n - G2; dl = d - sp.d0;
+        if (dl > best) { best = dl; o.ok = true; o.x = Q.x; o.y = Q.y; o.d = d; o.dl = dl; o.side = side; footOf(o, side); }
+      }
+    }
+    if (!o.ok) { o.dl = 0; o.d = sp.d0; }
+    return o;
+  }
+  function angDeg(ax, ay, bx, by) { return Math.atan2(ax * by - ay * bx, ax * bx + ay * by) * DEG; }
+  function calcAngles(sp, P, o) {
+    var i, b, s1, s2;
+    o.b = o.b || []; o.b2 = o.b2 || []; o.j = o.j || [];
+    for (i = 0; i < sp.bog.length; i++) {
+      b = sp.bog[i];
+      if (b.t === 'R') { o.b[i] = 0; o.b2[i] = -1; continue; }
+      s1 = P.sec[b.sec]; o.b[i] = Math.abs(angDeg(s1.ux, s1.uy, P.bog[i].ux, P.bog[i].uy));
+      if (b.sec2 >= 0) { s2 = P.sec[b.sec2]; o.b2[i] = Math.abs(angDeg(s2.ux, s2.uy, P.bog[i].ux, P.bog[i].uy)); }
+      else o.b2[i] = -1;
+    }
+    for (i = 0; i < sp.J.length; i++) o.j[i] = Math.abs(angDeg(P.sec[i].ux, P.sec[i].uy, P.sec[i + 1].ux, P.sec[i + 1].uy));
+    return o;
+  }
+
+  /* ================= прогон по всему пути (для максимумов и габаритной полосы) ================= */
+  function Run(sp, tr) {
+    var c0 = tr.arcs[0].s0, la = tr.arcs[tr.arcs.length - 1], c1 = la.s0 + la.len, i, nb;
+    this.sp = sp; this.tr = tr;
+    this.S0 = c0 - 3 - sp.x1;
+    this.S1 = c1 + 3 + sp.L - sp.x1;
+    this.len = this.S1 - this.S0;
+    this.ds = 0.05;
+    this.N = Math.floor(this.len / this.ds) + 1;
+    this.dl = []; this.tx = [];
+    for (i = 0; i < 4; i++) { this.dl.push(new Float32Array(this.N)); this.tx.push(new Float32Array(this.N * 2)); }
+    this.vs = new Float32Array(this.N); this.vsLast = 0;
+    this.bA = []; for (i = 0; i < sp.bog.length; i++) this.bA.push(0);
+    this.jA = []; for (i = 0; i < sp.J.length; i++) this.jA.push(0);
+    this.eds = 0.1; this.es0 = -2; nb = Math.ceil((tr.len + 4) / this.eds) + 1; this.enb = nb;
+    this.eL = new Float32Array(nb); this.eR = new Float32Array(nb);
+    for (i = 0; i < nb; i++) { this.eL[i] = -1e9; this.eR[i] = 1e9; }
+    this.pS = []; this.pN = [];
+    this.i = 0; this.done = false;
+    this.P = newPose(sp); this.C = {}; this.M = {}; this.A = {};
+    this.evIn = c0 - sp.a / 2 - this.S0;
+    this.evOut = c1 + sp.a / 2 + (sp.xN - sp.x1) - this.S0;
+  }
+  Run.prototype.envIdx = function (i, n) { if (i < 0 || i >= this.enb) return; if (n > this.eL[i]) this.eL[i] = n; if (n < this.eR[i]) this.eR[i] = n; };
+  Run.prototype.envPut = function (key, s, n) {
+    var ps = this.pS[key], pn = this.pN[key], bi, bj, i, t;
+    if (ps === undefined || Math.abs(s - ps) > 1.5) this.envIdx(Math.round((s - this.es0) / this.eds), n);
+    else {
+      bi = Math.round((Math.min(s, ps) - this.es0) / this.eds); bj = Math.round((Math.max(s, ps) - this.es0) / this.eds);
+      for (i = bi; i <= bj; i++) {
+        t = s === ps ? 1 : clamp(((this.es0 + i * this.eds) - ps) / (s - ps), 0, 1);
+        this.envIdx(i, pn + (n - pn) * t);
+      }
+    }
+    this.pS[key] = s; this.pN[key] = n;
+  };
+  Run.prototype.one = function (i) {
+    var sp = this.sp, tr = this.tr, P = this.P, c = this.C, k, ci, j, x, side, se, ns, sec, A, sf = this.S0 + i * this.ds;
+    solve(sp, tr, sf, P);
+    for (ci = 0; ci < 4; ci++) {
+      measCorner(sp, tr, P, ci, c);
+      this.dl[ci][i] = c.dl; this.tx[ci][2 * i] = c.x; this.tx[ci][2 * i + 1] = c.y;
+    }
+    for (k = 0; k < sp.secs.length; k++) {
+      sec = sp.secs[k];
+      for (j = 0; j < 4; j++) {
+        x = j < 2 ? sec.fa : sec.fb; side = (j & 1) ? -1 : 1;
+        sidePt(P.sec[k], x, side, sp.W, Q); se = estS(sp, P, x);
+        tr.project(Q.x, Q.y, se - 4, se + 4, PJ);
+        this.envPut(k * 4 + j, PJ.s, PJ.n);
+      }
+    }
+    if (i % 4 === 0 || i === this.N - 1) {
+      for (k = 0; k < sp.secs.length; k++) {
+        sec = sp.secs[k]; ns = Math.max(1, Math.ceil((sec.fb - sec.fa) / 0.3));
+        for (j = 1; j < ns; j++) {
+          x = sec.fa + (sec.fb - sec.fa) * j / ns; se = estS(sp, P, x);
+          for (side = -1; side <= 1; side += 2) {
+            sidePt(P.sec[k], x, side, sp.W, Q); tr.project(Q.x, Q.y, se - 4, se + 4, PJ);
+            this.envIdx(Math.round((PJ.s - this.es0) / this.eds), PJ.n);
+          }
+        }
+      }
+      measMid(sp, tr, P, this.M, 0.3);
+      this.vsLast = this.M.dl;
+    }
+    this.vs[i] = this.vsLast;
+    A = calcAngles(sp, P, this.A);
+    for (j = 0; j < sp.bog.length; j++) this.bA[j] = Math.max(this.bA[j], A.b[j], A.b2[j]);
+    for (j = 0; j < sp.J.length; j++) this.jA[j] = Math.max(this.jA[j], A.j[j]);
+  };
+  Run.prototype.work = function (ms) {
+    var t0 = now();
+    while (this.i < this.N) {
+      this.one(this.i); this.i++;
+      if ((this.i & 15) === 0 && now() - t0 > ms) return false;
+    }
+    this.finish();
+    return true;
+  };
+  Run.prototype.finish = function () {
+    var i, c, mx, mn, ix, tol = 0.0005, n, tr = this.tr, T = { x: 0, y: 0, h: 0, k: 0 }, s, sn, cs;
+    this.cMax = []; this.cMin = []; this.cArg = [];
+    for (c = 0; c < 4; c++) {
+      mx = -1e9; mn = 1e9;
+      for (i = 0; i < this.N; i++) { if (this.dl[c][i] > mx) mx = this.dl[c][i]; if (this.dl[c][i] < mn) mn = this.dl[c][i]; }
+      for (ix = 0; ix < this.N - 1; ix++) if (this.dl[c][ix] >= mx - tol) break;
+      this.cMax.push(mx); this.cMin.push(mn); this.cArg.push(ix * this.ds);
+    }
+    mx = -1e9; for (i = 0; i < this.N; i++) if (this.vs[i] > mx) mx = this.vs[i];
+    for (ix = 0; ix < this.N - 1; ix++) if (this.vs[ix] >= mx - tol) break;
+    this.vMax = mx; this.vArg = ix * this.ds;
+    this.dmax = Math.max(0.005, mx, this.cMax[0], this.cMax[1], this.cMax[2], this.cMax[3]);
+    this.dmin = Math.min(-0.005, this.cMin[0], this.cMin[1], this.cMin[2], this.cMin[3]);
+    /* граница габаритной полосы в мировых координатах */
+    n = 0;
+    this.eLx = new Float32Array(this.enb); this.eLy = new Float32Array(this.enb); this.eRx = new Float32Array(this.enb); this.eRy = new Float32Array(this.enb);
+    for (i = 0; i < this.enb; i++) {
+      if (!(this.eL[i] > this.eR[i] + 0.3)) continue;
+      s = this.es0 + i * this.eds; tr.at(s, T); sn = Math.sin(T.h); cs = Math.cos(T.h);
+      this.eLx[n] = T.x - sn * this.eL[i]; this.eLy[n] = T.y + cs * this.eL[i];
+      this.eRx[n] = T.x - sn * this.eR[i]; this.eRy[n] = T.y + cs * this.eR[i];
+      n++;
+    }
+    this.envN = n;
+    this.done = true;
+  };
+
+  /* ================= цвета ================= */
+  var CS = [[59, 95, 208], [33, 166, 184], [46, 157, 72], [232, 182, 44], [224, 51, 47]];
+  var NORM = { max: 0.1, min: -0.1 };
+  function mixc(a, b, t) { return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]; }
+  function colArr(dl) {
+    var t;
+    if (dl >= 0) { t = clamp(dl / NORM.max, 0, 1); return t < 0.5 ? mixc(CS[2], CS[3], t * 2) : mixc(CS[3], CS[4], t * 2 - 1); }
+    t = clamp(dl / NORM.min, 0, 1); return t < 0.5 ? mixc(CS[2], CS[1], t * 2) : mixc(CS[1], CS[0], t * 2 - 1);
+  }
+  function css(c, a) { return 'rgba(' + Math.round(c[0]) + ',' + Math.round(c[1]) + ',' + Math.round(c[2]) + ',' + (a === undefined ? 1 : a) + ')'; }
+  function lum(c) { return (0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]) / 255; }
+  function hexRGB(h) { var n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+  function hexA(h, a) { return css(hexRGB(h), a); }
+  function textCol(c) { return DARK ? css(c) : css([c[0] * 0.78, c[1] * 0.78, c[2] * 0.78]); }
+  var BUCK = [];
+  function makeBuckets() { var i; BUCK = []; for (i = -5; i <= 5; i++) BUCK.push(css(colArr(i < 0 ? NORM.min * (-i) / 5 : NORM.max * i / 5), 0.9)); }
+  function bucket(v) { return v >= 0 ? 5 + Math.round(clamp(v / NORM.max, 0, 1) * 5) : 5 - Math.round(clamp(v / NORM.min, 0, 1) * 5); }
+
+  var PAL_L = { bg: '#fbfaf6', grid: 'rgba(29,36,48,0.05)', grid5: 'rgba(29,36,48,0.10)', bed: '#ebe5d6', sleeper: '#d3c7aa', rail: '#565e6b', axis: 'rgba(29,36,48,0.42)', ink: '#1d2430', muted: '#6b7280', env: 'rgba(60,72,96,0.10)', envLine: 'rgba(45,55,75,0.75)', bogie: '#2b313b', wheel: '#14171c', pivot: '#ffffff', rigid: '#a3332c', bellows: 'rgba(40,44,52,0.55)', panel: 'rgba(250,248,242,0.93)', panelLine: '#d6d0c1', mark: '#7a6f58' };
+  var PAL_D = { bg: '#161b22', grid: 'rgba(255,255,255,0.04)', grid5: 'rgba(255,255,255,0.08)', bed: '#1f2630', sleeper: '#303946', rail: '#a7b0bd', axis: 'rgba(228,232,238,0.42)', ink: '#e4e8ee', muted: '#9aa4b2', env: 'rgba(170,190,220,0.10)', envLine: 'rgba(190,205,230,0.7)', bogie: '#c9d1dc', wheel: '#e4e8ee', pivot: '#161b22', rigid: '#ff8a7a', bellows: 'rgba(200,206,214,0.38)', panel: 'rgba(23,28,36,0.93)', panelLine: '#2f3744', mark: '#b5a98d' };
+  var DARK = false;
+  var mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+  function readTheme() { DARK = !!(mq && mq.matches); }
+
+  /* ================= состояние ================= */
+  var carIdx = 0, trackIdx = 0, RAD = 25, INS = 0, pos = 0, playing = false, speed = 2.8, follow = false;
+  var params = {}, spec = null, track = null, run = null, need = true, tabsDirty = true;
+  var cur = { P: null, c: [{}, {}, {}, {}], m: {}, A: {} };
+  var LAYDEF = [['lines', 'Линии от углов до рельса', 1], ['labels', 'Подписи расстояний', 1], ['mid', 'Вынос середины (Вс)', 1], ['env', 'Габаритная полоса всего пути', 1], ['trace', 'Следы углов', 1], ['glass', 'Прозрачный кузов (видно тележки)', 1], ['sleep', 'Шпалы', 1], ['axes', 'Оси секций и хорды тележек', 0], ['panel', 'Табличка с цифрами на схеме', 1]];
+  var LAY = {};
+  var CN = ['Маска слева', 'Маска справа', 'Хвост слева', 'Хвост справа'];
+  var CNs = ['маска слева', 'маска справа', 'хвост слева', 'хвост справа'];
+
+  var cv = $('cv'), ctx = cv.getContext('2d'), CW = 300, CH = 200, DPR = 1;
+  var view = { k: 8, cx: 0, cy: 0 };
+  var slider = $('pos');
+
+  function computeCur() {
+    var i;
+    if (!run) return;
+    solve(spec, track, run.S0 + pos, cur.P);
+    for (i = 0; i < 4; i++) measCorner(spec, track, cur.P, i, cur.c[i]);
+    measMid(spec, track, cur.P, cur.m, 0.2);
+    calcAngles(spec, cur.P, cur.A);
+  }
+  function vehCentre(o) {
+    var P = cur.P, a = { x: 0, y: 0 }, b = { x: 0, y: 0 };
+    secPt(P.sec[0], 0, a); secPt(P.sec[P.sec.length - 1], spec.L, b);
+    o.x = (a.x + b.x) / 2; o.y = (a.y + b.y) / 2; return o;
+  }
+
+  /* ================= отрисовка ================= */
+  var T0 = { x: 0, y: 0, h: 0, k: 0 };
+  var VA = { x: 0, y: 0 }, VB = { x: 0, y: 0 }, VC = { x: 0, y: 0 }, VD = { x: 0, y: 0 };
+  function trackPath(c, tr, o, X, Y, k) {
+    var i, g, a0, a1, segs = tr.segs, s0 = segs[0];
+    c.beginPath();
+    c.moveTo(X(s0.x0 - o * Math.sin(s0.h0)), Y(s0.y0 + o * Math.cos(s0.h0)));
+    for (i = 0; i < segs.length; i++) {
+      g = segs[i];
+      if (g.t === 'L') c.lineTo(X(g.x0 + g.len * g.c - o * g.sn), Y(g.y0 + g.len * g.sn + o * g.c));
+      else {
+        a0 = g.h0 - g.dir * Math.PI / 2; a1 = a0 + g.dir * g.th;
+        c.arc(X(g.cx), Y(g.cy), Math.max(0.1, (g.R - g.dir * o) * k), -a0, -a1, g.dir > 0);
+      }
+    }
+  }
+  function quadPath(c, X, Y, cx, cy, ux, uy, hl, hw) {
+    var ax = ux * hl, ay = uy * hl, bx = -uy * hw, by = ux * hw;
+    c.moveTo(X(cx + ax + bx), Y(cy + ay + by));
+    c.lineTo(X(cx + ax - bx), Y(cy + ay - by));
+    c.lineTo(X(cx - ax - bx), Y(cy - ay - by));
+    c.lineTo(X(cx - ax + bx), Y(cy - ay + by));
+    c.closePath();
+  }
+  function rr(c, x, y, w, h, r) {
+    c.beginPath(); c.moveTo(x + r, y); c.lineTo(x + w - r, y); c.arcTo(x + w, y, x + w, y + r, r);
+    c.lineTo(x + w, y + h - r); c.arcTo(x + w, y + h, x + w - r, y + h, r); c.lineTo(x + r, y + h);
+    c.arcTo(x, y + h, x, y + h - r, r); c.lineTo(x, y + r); c.arcTo(x, y, x + r, y, r); c.closePath();
+  }
+  function drawGrid(c, w, h, k, ox, oy, pal) {
+    var minor = k >= 14 ? 1 : (k >= 2.8 ? 5 : 10), major = minor * 5, x0 = -ox / k, x1 = (w - ox) / k, y0 = (oy - h) / k, y1 = oy / k, v, p, pass, isMaj;
+    for (pass = 0; pass < 2; pass++) {
+      c.beginPath(); c.strokeStyle = pass ? pal.grid5 : pal.grid; c.lineWidth = 1;
+      for (v = Math.ceil(x0 / minor) * minor; v <= x1; v += minor) {
+        isMaj = Math.abs(v / major - Math.round(v / major)) < 1e-6;
+        if (isMaj !== (pass === 1)) continue;
+        p = Math.round(ox + v * k) + 0.5; c.moveTo(p, 0); c.lineTo(p, h);
+      }
+      for (v = Math.ceil(y0 / minor) * minor; v <= y1; v += minor) {
+        isMaj = Math.abs(v / major - Math.round(v / major)) < 1e-6;
+        if (isMaj !== (pass === 1)) continue;
+        p = Math.round(oy - v * k) + 0.5; c.moveTo(0, p); c.lineTo(w, p);
+      }
+      c.stroke();
+    }
+  }
+  function smallText(c, txt, x, y, col, al) {
+    c.font = '11px ' + FONT; c.fillStyle = col; c.textAlign = al || 'center'; c.textBaseline = 'middle'; c.fillText(txt, x, y);
+  }
+  function drawMarks(c, tr, X, Y, k, pal) {
+    var i, g, n = tr.arcs.length, s, j, nx, ny, mid, hm, x, y, lx, ly, txt;
+    if (k < 1.6) return;
+    c.strokeStyle = pal.mark; c.lineWidth = 1;
+    for (i = 0; i < n; i++) {
+      g = tr.arcs[i];
+      for (j = 0; j < 2; j++) {
+        s = j ? g.s0 + g.len : g.s0; tr.at(s, T0);
+        nx = -Math.sin(T0.h); ny = Math.cos(T0.h);
+        c.beginPath(); c.moveTo(X(T0.x + nx * 2.1), Y(T0.y + ny * 2.1)); c.lineTo(X(T0.x - nx * 2.1), Y(T0.y - ny * 2.1)); c.stroke();
+        if (k >= 3) {
+          txt = (j ? 'ККК' : 'НКК') + (n > 1 ? i + 1 : '');
+          lx = T0.x - g.dir * nx * 3.4; ly = T0.y - g.dir * ny * 3.4;
+          smallText(c, txt, X(lx), Y(ly), pal.mark);
+        }
+      }
+      hm = g.h0 + g.dir * g.th / 2; mid = { x: g.cx + g.dir * g.R * Math.sin(hm), y: g.cy - g.dir * g.R * Math.cos(hm) };
+      c.save(); c.setLineDash([3, 4]); c.globalAlpha = 0.7;
+      c.beginPath(); c.moveTo(X(g.cx), Y(g.cy)); c.lineTo(X(mid.x), Y(mid.y)); c.stroke(); c.restore();
+      x = X(g.cx); y = Y(g.cy);
+      c.beginPath(); c.moveTo(x - 5, y); c.lineTo(x + 5, y); c.moveTo(x, y - 5); c.lineTo(x, y + 5); c.stroke();
+      x = X(g.cx + (mid.x - g.cx) * 0.5); y = Y(g.cy + (mid.y - g.cy) * 0.5);
+      c.font = 'bold 12px ' + FONT; c.textAlign = 'center'; c.textBaseline = 'middle';
+      c.fillStyle = pal.bg; c.globalAlpha = 0.8; c.fillRect(x - 26, y - 9, 52, 18); c.globalAlpha = 1;
+      c.fillStyle = pal.mark; c.fillText('R ' + num(g.R) + ' м', x, y);
+    }
+  }
+  function drawBogie(c, X, Y, k, pal, B, rigid, a) {
+    var ux = B.ux, uy = B.uy, nx = -uy, ny = ux, wy = G2 + 0.035, i, ax, ay, fc = rigid ? pal.rigid : pal.bogie, r;
+    c.beginPath(); quadPath(c, X, Y, B.x, B.y, ux, uy, a / 2 + 0.5, 0.98);
+    c.fillStyle = hexA(fc, 0.16); c.fill(); c.strokeStyle = fc; c.lineWidth = Math.max(1, Math.min(2, 0.05 * k)); c.stroke();
+    c.beginPath();
+    for (i = 0; i < 2; i++) {
+      ax = i ? B.rx : B.fx; ay = i ? B.ry : B.fy;
+      quadPath(c, X, Y, ax + nx * wy, ay + ny * wy, ux, uy, 0.33, 0.065);
+      quadPath(c, X, Y, ax - nx * wy, ay - ny * wy, ux, uy, 0.33, 0.065);
+    }
+    c.fillStyle = pal.wheel; c.fill();
+    c.beginPath();
+    for (i = 0; i < 2; i++) { ax = i ? B.rx : B.fx; ay = i ? B.ry : B.fy; c.moveTo(X(ax + nx * wy), Y(ay + ny * wy)); c.lineTo(X(ax - nx * wy), Y(ay - ny * wy)); }
+    c.strokeStyle = pal.wheel; c.lineWidth = Math.max(1, 0.05 * k); c.stroke();
+    r = Math.max(3.5, 0.2 * k);
+    c.beginPath();
+    if (rigid) quadPath(c, X, Y, B.x, B.y, ux, uy, r / k, r / k);
+    else c.arc(X(B.x), Y(B.y), r, 0, TWO_PI);
+    c.fillStyle = pal.pivot; c.fill(); c.strokeStyle = fc; c.lineWidth = Math.max(1.4, 0.05 * k); c.stroke();
+    if (rigid) {
+      c.beginPath();
+      c.moveTo(X(B.x + (ux - nx) * r / k * 0.7), Y(B.y + (uy - ny) * r / k * 0.7)); c.lineTo(X(B.x - (ux - nx) * r / k * 0.7), Y(B.y - (uy - ny) * r / k * 0.7));
+      c.moveTo(X(B.x + (ux + nx) * r / k * 0.7), Y(B.y + (uy + ny) * r / k * 0.7)); c.lineTo(X(B.x - (ux + nx) * r / k * 0.7), Y(B.y - (uy + ny) * r / k * 0.7));
+      c.stroke();
+    }
+  }
+  function drawVehicle(c, X, Y, k, pal) {
+    var sp = spec, P = cur.P, secs = sp.secs, n = secs.length, i, kk, sec, col = CARS[carIdx].col, rgb = hexRGB(col), t, cab = [rgb[0] * 0.45, rgb[1] * 0.45, rgb[2] * 0.45];
+    var fillA = LAY.glass ? (DARK ? 0.45 : 0.38) : 0.97, lw = Math.max(1, Math.min(2.4, 0.07 * k)), wb = sp.W * 0.9;
+    if (LAY.glass) for (i = 0; i < sp.bog.length; i++) drawBogie(c, X, Y, k, pal, P.bog[i], sp.bog[i].t === 'R', sp.a);
+    for (kk = 0; kk < n; kk++) {
+      sec = P.sec[kk];
+      sidePt(sec, secs[kk].fa, 1, sp.W, VA); sidePt(sec, secs[kk].fa, -1, sp.W, VB);
+      sidePt(sec, secs[kk].fb, -1, sp.W, VC); sidePt(sec, secs[kk].fb, 1, sp.W, VD);
+      c.beginPath(); c.moveTo(X(VA.x), Y(VA.y)); c.lineTo(X(VB.x), Y(VB.y)); c.lineTo(X(VC.x), Y(VC.y)); c.lineTo(X(VD.x), Y(VD.y)); c.closePath();
+      c.fillStyle = css(rgb, fillA); c.fill(); c.strokeStyle = col; c.lineWidth = lw; c.stroke();
+    }
+    for (kk = 0; kk < n - 1; kk++) {
+      sidePt(P.sec[kk], secs[kk].fb + 0.02, 1, wb, VA); sidePt(P.sec[kk], secs[kk].fb + 0.02, -1, wb, VB);
+      sidePt(P.sec[kk + 1], secs[kk + 1].fa - 0.02, -1, wb, VC); sidePt(P.sec[kk + 1], secs[kk + 1].fa - 0.02, 1, wb, VD);
+      c.beginPath(); c.moveTo(X(VA.x), Y(VA.y)); c.lineTo(X(VB.x), Y(VB.y)); c.lineTo(X(VC.x), Y(VC.y)); c.lineTo(X(VD.x), Y(VD.y)); c.closePath();
+      c.fillStyle = pal.bellows; c.fill();
+      if (k > 6) {
+        c.beginPath();
+        for (i = 1; i < 3; i++) {
+          t = i / 3;
+          c.moveTo(X(VA.x + (VD.x - VA.x) * t), Y(VA.y + (VD.y - VA.y) * t)); c.lineTo(X(VB.x + (VC.x - VB.x) * t), Y(VB.y + (VC.y - VB.y) * t));
+        }
+        c.strokeStyle = pal.bellows; c.lineWidth = 1; c.stroke();
+      }
+      secPt(P.sec[kk], secs[kk].xb, VA);
+      c.beginPath(); c.arc(X(VA.x), Y(VA.y), Math.max(2.5, 0.12 * k), 0, TWO_PI); c.fillStyle = pal.ink; c.fill();
+    }
+    /* кабина: тёмная полоса у маски и стрелка хода */
+    sec = P.sec[0];
+    sidePt(sec, 0, 1, sp.W, VA); sidePt(sec, 0, -1, sp.W, VB); sidePt(sec, 0.6, -1, sp.W, VC); sidePt(sec, 0.6, 1, sp.W, VD);
+    c.beginPath(); c.moveTo(X(VA.x), Y(VA.y)); c.lineTo(X(VB.x), Y(VB.y)); c.lineTo(X(VC.x), Y(VC.y)); c.lineTo(X(VD.x), Y(VD.y)); c.closePath();
+    c.fillStyle = css(cab, LAY.glass ? 0.75 : 1); c.fill();
+    if (k > 3) {
+      sidePt(sec, 1.3, 0, sp.W, VA); sidePt(sec, 2.3, 0.55, sp.W, VB); sidePt(sec, 2.3, -0.55, sp.W, VC);
+      c.beginPath(); c.moveTo(X(VB.x), Y(VB.y)); c.lineTo(X(VA.x), Y(VA.y)); c.lineTo(X(VC.x), Y(VC.y));
+      c.strokeStyle = css(cab, 0.9); c.lineWidth = Math.max(1.5, 0.12 * k); c.lineCap = 'round'; c.lineJoin = 'round'; c.stroke(); c.lineCap = 'butt';
+    }
+    if (!LAY.glass) for (i = 0; i < sp.bog.length; i++) { /* тележки под непрозрачным кузовом: только центры */
+      c.beginPath(); c.arc(X(P.bog[i].x), Y(P.bog[i].y), Math.max(3, 0.18 * k), 0, TWO_PI);
+      c.fillStyle = pal.pivot; c.fill(); c.strokeStyle = sp.bog[i].t === 'R' ? pal.rigid : pal.bogie; c.lineWidth = 1.5; c.stroke();
+    }
+    if (LAY.axes) {
+      c.save(); c.setLineDash([12, 4, 2, 4]); c.strokeStyle = pal.ink; c.lineWidth = 1;
+      for (kk = 0; kk < n; kk++) {
+        secPt(P.sec[kk], secs[kk].fa - 1, VA); secPt(P.sec[kk], secs[kk].fb + 1, VB);
+        c.beginPath(); c.moveTo(X(VA.x), Y(VA.y)); c.lineTo(X(VB.x), Y(VB.y)); c.stroke();
+      }
+      c.setLineDash([]); c.lineWidth = 1.6; c.strokeStyle = pal.rigid;
+      for (i = 0; i < sp.bog.length; i++) { c.beginPath(); c.moveTo(X(P.bog[i].fx), Y(P.bog[i].fy)); c.lineTo(X(P.bog[i].rx), Y(P.bog[i].ry)); c.stroke(); }
+      c.restore();
+    }
+  }
+  function pill(c, text, ax, ay, dx, dy, carr) {
+    c.font = 'bold 12px ' + FONT;
+    var tw = c.measureText(text).width, bw = tw + 14, bh = 20, off = 8 + Math.abs(dx) * bw / 2 + Math.abs(dy) * bh / 2, cx = ax + dx * off, cy = ay + dy * off;
+    rr(c, cx - bw / 2, cy - bh / 2, bw, bh, 6);
+    c.fillStyle = css(carr); c.fill(); c.lineWidth = 1; c.strokeStyle = 'rgba(0,0,0,0.2)'; c.stroke();
+    c.fillStyle = lum(carr) > 0.6 ? '#1d2430' : '#ffffff'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText(text, cx, cy + 0.5);
+  }
+  function dimLine(c, X, Y, k, m, carr, dashed, text) {
+    var x1 = X(m.x), y1 = Y(m.y), x2 = X(m.fx), y2 = Y(m.fy), ox = -m.side * Math.sin(m.h), oy = m.side * Math.cos(m.h), sx = ox, sy = -oy, px = -sy, py = sx, tl = 5, col = css(carr), t1;
+    c.strokeStyle = col; c.lineWidth = dashed ? 2 : 2.6; c.lineCap = 'round';
+    if (dashed) c.setLineDash([5, 4]);
+    c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke();
+    c.setLineDash([]); c.lineCap = 'butt';
+    c.lineWidth = 1.6; c.beginPath();
+    c.moveTo(x1 - px * tl, y1 - py * tl); c.lineTo(x1 + px * tl, y1 + py * tl);
+    c.moveTo(x2 - px * tl, y2 - py * tl); c.lineTo(x2 + px * tl, y2 + py * tl);
+    c.stroke();
+    c.beginPath(); c.arc(x1, y1, 3.4, 0, TWO_PI); c.fillStyle = col; c.fill();
+    if (text && k >= 3) {
+      t1 = (m.x - m.fx) * ox + (m.y - m.fy) * oy;
+      if (t1 > 0) pill(c, text, x1, y1, sx, sy, carr); else pill(c, text, x2, y2, sx, sy, carr);
+    }
+  }
+  function isMax(i) { return run && run.done && cur.c[i].dl > 0.005 && run.cMax[i] >= 0.5 * run.dmax && cur.c[i].dl >= run.cMax[i] - 0.0005; }
+  function drawLines(c, X, Y, k) {
+    var i, m, txt;
+    for (i = 0; i < 4; i++) {
+      m = cur.c[i];
+      txt = LAY.labels ? mm(m.d) + ' мм' + (isMax(i) ? ' · макс' : '') : null;
+      dimLine(c, X, Y, k, m, colArr(m.dl), false, txt);
+    }
+    m = cur.m;
+    if (LAY.mid && m.ok && m.dl > 0.004) midDim(c, X, Y, k, m, LAY.labels);
+  }
+  var MD = { x: 0, y: 0, fx: 0, fy: 0, side: 1, h: 0 };
+  function midDim(c, X, Y, k, m, lab) {
+    var sn = Math.sin(m.h), cs = Math.cos(m.h), w = m.side * spec.W / 2, sx = m.tx - w * sn, sy = m.ty + w * cs, carr = colArr(m.dl);
+    c.save(); c.setLineDash([2, 3]); c.strokeStyle = DARK ? 'rgba(228,232,238,0.7)' : 'rgba(29,36,48,0.6)'; c.lineWidth = 1.2;
+    c.beginPath(); c.moveTo(X(sx - 1.6 * cs), Y(sy - 1.6 * sn)); c.lineTo(X(sx + 1.6 * cs), Y(sy + 1.6 * sn)); c.stroke(); c.restore();
+    MD.x = m.x; MD.y = m.y; MD.fx = sx; MD.fy = sy; MD.side = m.side; MD.h = m.h;
+    dimLine(c, X, Y, k, MD, carr, false, lab ? 'Вс ' + smm(m.dl) + ' мм' : null);
+  }
+  function drawTraces(c, X, Y) {
+    var ic = Math.min(Math.round(pos / run.ds), run.i - 1), ci, tx, dl, j, px, py, lx = 0, ly = 0, b, cb;
+    if (ic < 1) return;
+    c.lineWidth = 2; c.lineCap = 'round'; c.lineJoin = 'round';
+    for (ci = 0; ci < 4; ci++) {
+      tx = run.tx[ci]; dl = run.dl[ci]; cb = -1;
+      for (j = 0; j <= ic; j++) {
+        px = X(tx[2 * j]); py = Y(tx[2 * j + 1]);
+        if (j === 0) { cb = bucket(dl[0]); c.beginPath(); c.strokeStyle = BUCK[cb]; c.moveTo(px, py); lx = px; ly = py; continue; }
+        if (j < ic && (px - lx) * (px - lx) + (py - ly) * (py - ly) < 2.25) continue;
+        c.lineTo(px, py); lx = px; ly = py;
+        b = bucket(dl[j]);
+        if (b !== cb) { c.stroke(); c.beginPath(); c.strokeStyle = BUCK[b]; c.moveTo(px, py); cb = b; }
+      }
+      c.stroke();
+    }
+    c.lineCap = 'butt';
+  }
+  function drawEnvelope(c, X, Y, pal, fill) {
+    var i, n = run.envN;
+    if (fill) {
+      c.beginPath();
+      for (i = 0; i < n; i++) { if (i) c.lineTo(X(run.eLx[i]), Y(run.eLy[i])); else c.moveTo(X(run.eLx[i]), Y(run.eLy[i])); }
+      for (i = n - 1; i >= 0; i--) c.lineTo(X(run.eRx[i]), Y(run.eRy[i]));
+      c.closePath(); c.fillStyle = pal.env; c.fill();
+      return;
+    }
+    c.save(); c.setLineDash([7, 5]); c.strokeStyle = pal.envLine; c.lineWidth = 1.3;
+    c.beginPath();
+    for (i = 0; i < n; i++) { if (i) c.lineTo(X(run.eLx[i]), Y(run.eLy[i])); else c.moveTo(X(run.eLx[i]), Y(run.eLy[i])); }
+    c.stroke(); c.beginPath();
+    for (i = 0; i < n; i++) { if (i) c.lineTo(X(run.eRx[i]), Y(run.eRy[i])); else c.moveTo(X(run.eRx[i]), Y(run.eRy[i])); }
+    c.stroke(); c.restore();
+  }
+  function curVals() {
+    var c = cur.c;
+    return { vp: Math.max(c[0].dl, c[1].dl), vz: Math.max(c[2].dl, c[3].dl), vc: cur.m.ok ? Math.max(0, cur.m.dl) : 0 };
+  }
+  function drawPanel(c, w, pal) {
+    var car = CARS[carIdx], fs = w < 560 ? 11 : 12.5, lh = Math.round(fs * 1.55), v = curVals(), segs, i, x, y, wd, tw, pw, head, tail, lines;
+    head = car.name; tail = TRACKS[trackIdx].name + ', R ' + RAD + ' м';
+    c.font = 'bold ' + fs + 'px ' + FONT;
+    lines = c.measureText(head + ' · ' + tail).width <= w - 90 ? [[head + ' · ' + tail, 1]] : [[head, 1], [tail, 1]];
+    lines.push(['пройдено ' + f1(pos) + ' из ' + f1(run.len) + ' м', 0]);
+    segs = [['Вп ', null], [smm(v.vp), v.vp], ['   Вз ', null], [smm(v.vz), v.vz], ['   Вс ', null], [smm(v.vc), v.vc], [' мм', null]];
+    wd = 0;
+    for (i = 0; i < lines.length; i++) { c.font = (lines[i][1] ? 'bold ' : '') + fs + 'px ' + FONT; wd = Math.max(wd, c.measureText(lines[i][0]).width); }
+    tw = 0; for (i = 0; i < segs.length; i++) { c.font = (segs[i][1] === null ? '' : 'bold ') + fs + 'px ' + FONT; tw += c.measureText(segs[i][0]).width; }
+    wd = Math.max(wd, tw); pw = wd + 22;
+    rr(c, 10, 10, pw, lh * (lines.length + 1) + 12, 8); c.fillStyle = pal.panel; c.fill(); c.strokeStyle = pal.panelLine; c.lineWidth = 1; c.stroke();
+    c.textAlign = 'left'; c.textBaseline = 'middle';
+    y = 10 + 6 + lh / 2;
+    for (i = 0; i < lines.length; i++) {
+      c.font = (lines[i][1] ? 'bold ' : '') + fs + 'px ' + FONT; c.fillStyle = lines[i][1] ? pal.ink : pal.muted;
+      c.fillText(lines[i][0], 21, y); y += lh;
+    }
+    x = 21;
+    for (i = 0; i < segs.length; i++) {
+      c.font = (segs[i][1] === null ? '' : 'bold ') + fs + 'px ' + FONT;
+      c.fillStyle = segs[i][1] === null ? pal.ink : textCol(colArr(segs[i][1]));
+      c.fillText(segs[i][0], x, y); x += c.measureText(segs[i][0]).width;
+    }
+  }
+  function drawScale(c, w, h, k, pal) {
+    var nice = [0.5, 1, 2, 5, 10, 20, 50, 100], L = nice[0], i, x = 12, y = h - 16, px;
+    for (i = 0; i < nice.length; i++) if (nice[i] * k <= Math.min(170, w * 0.32)) L = nice[i];
+    px = L * k;
+    c.fillStyle = pal.ink; c.fillRect(x, y, px / 2, 5); c.fillStyle = pal.bg; c.fillRect(x + px / 2, y, px / 2, 5);
+    c.strokeStyle = pal.ink; c.lineWidth = 1; c.strokeRect(x + 0.5, y + 0.5, px, 5);
+    c.font = '11px ' + FONT; c.fillStyle = pal.ink; c.textBaseline = 'bottom';
+    c.textAlign = 'left'; c.fillText('0', x, y - 2); c.textAlign = 'right'; c.fillText(num(L) + ' м', x + px, y - 2);
+  }
+  function render(c, w, h, V, pal, noPanel) {
+    var tr = track, k = V.k, ox = w / 2 - V.cx * k, oy = h / 2 + V.cy * k, s, cs, sn, x, y, ax, ay, bx, by;
+    function X(v) { return ox + v * k; }
+    function Y(v) { return oy - v * k; }
+    c.fillStyle = pal.bg; c.fillRect(0, 0, w, h);
+    drawGrid(c, w, h, k, ox, oy, pal);
+    if (!tr || !run) return;
+    c.lineJoin = 'round'; c.lineCap = 'butt';
+    c.strokeStyle = pal.bed; c.lineWidth = Math.max(2, 3.1 * k); trackPath(c, tr, 0, X, Y, k); c.stroke();
+    if (LAY.env && run.done && run.envN > 1) drawEnvelope(c, X, Y, pal, true);
+    if (LAY.sleep && k >= 2.5) {
+      c.beginPath();
+      for (s = 0.375; s < tr.len; s += 0.75) {
+        tr.at(s, T0); x = X(T0.x); y = Y(T0.y);
+        if (x < -60 || x > w + 60 || y < -60 || y > h + 60) continue;
+        cs = Math.cos(T0.h); sn = Math.sin(T0.h); ax = 0.11 * cs; ay = 0.11 * sn; bx = -1.3 * sn; by = 1.3 * cs;
+        c.moveTo(X(T0.x + ax + bx), Y(T0.y + ay + by)); c.lineTo(X(T0.x + ax - bx), Y(T0.y + ay - by));
+        c.lineTo(X(T0.x - ax - bx), Y(T0.y - ay - by)); c.lineTo(X(T0.x - ax + bx), Y(T0.y - ay + by)); c.closePath();
+      }
+      c.fillStyle = pal.sleeper; c.fill();
+    }
+    c.strokeStyle = pal.rail; c.lineWidth = Math.max(1.3, 0.073 * k);
+    trackPath(c, tr, G2 + 0.0365, X, Y, k); c.stroke();
+    trackPath(c, tr, -G2 - 0.0365, X, Y, k); c.stroke();
+    c.save(); c.setLineDash([12, 4, 2, 4]); c.strokeStyle = pal.axis; c.lineWidth = 1; trackPath(c, tr, 0, X, Y, k); c.stroke(); c.restore();
+    drawMarks(c, tr, X, Y, k, pal);
+    if (LAY.env && run.done && run.envN > 1) drawEnvelope(c, X, Y, pal, false);
+    if (LAY.trace) drawTraces(c, X, Y);
+    if (cur.P && cur.P.ok) {
+      drawVehicle(c, X, Y, k, pal);
+      if (LAY.lines) drawLines(c, X, Y, k);
+    }
+    if (LAY.panel && !noPanel) drawPanel(c, w, pal);
+    drawScale(c, w, h, k, pal);
+  }
+  function draw() {
+    var o;
+    if (follow && cur.P && cur.P.ok) { o = vehCentre({}); view.cx = o.x - (LAY.panel && CW > 520 ? 50 : 0) / view.k; view.cy = o.y + (LAY.panel ? 34 : 0) / view.k; }
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    render(ctx, CW, CH, view, DARK ? PAL_D : PAL_L);
+  }
+
+  /* ================= камера ================= */
+  function sizeCanvas() {
+    var r = cv.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+    CW = Math.max(120, Math.round(r.width)); CH = Math.max(120, Math.round(r.height)); DPR = dpr;
+    cv.width = Math.round(CW * dpr); cv.height = Math.round(CH * dpr);
+    need = true;
+  }
+  function fit() {
+    var x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9, s, m = 4, T = { x: 0, y: 0, h: 0, k: 0 };
+    for (s = 0; s <= track.len; s += 1) {
+      track.at(s, T);
+      if (T.x < x0) x0 = T.x;
+      if (T.x > x1) x1 = T.x;
+      if (T.y < y0) y0 = T.y;
+      if (T.y > y1) y1 = T.y;
+    }
+    view.k = clamp(Math.min((CW - 24) / (x1 - x0 + 2 * m), (CH - 24) / (y1 - y0 + 2 * m)), 0.8, 400);
+    view.cx = (x0 + x1) / 2; view.cy = (y0 + y1) / 2;
+    setFollow(false);
+    need = true;
+  }
+  function zoomAt(mx, my, f) {
+    var k = view.k, k2 = clamp(k * f, 0.8, 400), wx, wy;
+    if (follow) { mx = CW / 2; my = CH / 2; }
+    wx = view.cx + (mx - CW / 2) / k; wy = view.cy - (my - CH / 2) / k;
+    view.k = k2; view.cx = wx - (mx - CW / 2) / k2; view.cy = wy + (my - CH / 2) / k2;
+    need = true;
+  }
+  function panBy(dx, dy) { if (follow) setFollow(false); view.cx -= dx / view.k; view.cy += dy / view.k; need = true; }
+  function followK() { return clamp(Math.min(CW * 0.44 / spec.L, CH / 14), 4, 60); }
+  function setFollow(on) {
+    follow = on; $('zfol').className = on ? 'on' : '';
+    if (on) view.k = Math.max(view.k, followK());
+    need = true;
+  }
+
+  /* ================= интерфейс ================= */
+  function setPos(v, fromPlay) {
+    if (!run) return;
+    pos = clamp(v, 0, run.len);
+    if (!fromPlay || document.activeElement !== slider) slider.value = String(pos);
+    computeCur();
+    $('posv').innerHTML = f1(pos) + ' м <small>из ' + f1(run.len) + '</small>';
+    need = true; tabsDirty = true;
+  }
+  function setPlaying(on) {
+    playing = on;
+    $('bplay').innerHTML = on
+      ? '<svg width="14" height="14" viewBox="0 0 14 14"><rect x="2" y="1" width="3.5" height="12" rx="1" fill="currentColor"/><rect x="8.5" y="1" width="3.5" height="12" rx="1" fill="currentColor"/></svg>Стоп'
+      : '<svg width="14" height="14" viewBox="0 0 14 14"><path d="M3 1.5v11l9.5-5.5z" fill="currentColor"/></svg>Ехать';
+  }
+  function buildCars() {
+    var h = '', i, c;
+    for (i = 0; i < CARS.length; i++) { c = CARS[i]; h += '<button data-i="' + i + '"><i style="background:' + c.col + '"></i><b>' + c.name + '</b><small>' + c.sub + '</small></button>'; }
+    $('cars').innerHTML = h;
+  }
+  function markCars() {
+    var b = $('cars').getElementsByTagName('button'), i;
+    for (i = 0; i < b.length; i++) b[i].className = i === carIdx ? 'on' : '';
+  }
+  function buildTracks() {
+    var h = '', i;
+    for (i = 0; i < TRACKS.length; i++) h += '<button data-i="' + i + '">' + TRACKS[i].name + '</button>';
+    $('tracks').innerHTML = h;
+  }
+  function markTracks() {
+    var b = $('tracks').getElementsByTagName('button'), i;
+    for (i = 0; i < b.length; i++) b[i].className = i === trackIdx ? 'on' : '';
+    $('insrow').style.display = TRACKS[trackIdx].ins ? '' : 'none';
+  }
+  function buildLayers() {
+    var h = '', i;
+    for (i = 0; i < LAYDEF.length; i++) h += '<label><input type="checkbox" data-k="' + LAYDEF[i][0] + '"' + (LAY[LAYDEF[i][0]] ? ' checked' : '') + '>' + LAYDEF[i][1] + '</label>';
+    $('layers').innerHTML = h;
+  }
+  function buildDims() {
+    var car = CARS[carIdx], p = params[car.id], h = '', i, f;
+    for (i = 0; i < car.f.length; i++) { f = car.f[i]; h += '<div class="row"><span>' + f[1] + ', мм</span><input type="number" inputmode="numeric" step="1" min="1" data-k="' + f[0] + '" value="' + p[f[0]] + '"></div>'; }
+    h += '<div class="note warn" id="dmerr"></div><button class="lnk" id="dmreset">Вернуть исходные размеры</button>';
+    $('dims').innerHTML = h;
+  }
+  function edited(id) { var p = params[id], k; for (k in p) if (p.hasOwnProperty(k) && p[k] !== CARS[carIdx].def[k]) return true; return false; }
+  function carInfo() {
+    var car = CARS[carIdx], p = params[car.id];
+    $('carinfo').innerHTML = 'Длина ' + grp(mmi(spec.L)) + ' мм, ширина ' + grp(p.W) + ', база тележки ' + grp(p.a) + '. ' + carNote(car.id, p) + (edited(car.id) ? ' <span class="warn">Размеры изменены.</span>' : '');
+  }
+  function trackInfo() {
+    var t = TRACKS[trackIdx], s = '', i, la = 0;
+    for (i = 0; i < track.arcs.length; i++) la += track.arcs[i].len;
+    if (t.id === 'loop') s = 'Отворот вправо на ' + Math.round(track.alpha) + '°, петля влево на ' + Math.round(180 + 2 * track.alpha) + '°, снова вправо на ' + Math.round(track.alpha) + '°; выход на соседний путь, междупутье 3,2 м. ';
+    else if (t.id === 's') s = 'Две кривые по 45° в разные стороны (обратная кривая). ';
+    s += 'Длина кривых ' + f1(la) + ' м.';
+    $('trackinfo').innerHTML = s;
+  }
+  var tabC = false;
+  function buildTables() {
+    var h = '<tr><th></th><th class="n">до рельса</th><th class="n">вынос</th><th class="n">макс.</th></tr>', i, sp = spec, b, nm;
+    for (i = 0; i < 5; i++) h += '<tr><td><span class="sw" id="tsw' + i + '"></span>' + (i < 4 ? CN[i] : 'Середина (Вс)') + '</td><td class="n" id="tcd' + i + '"></td><td class="n" id="tcl' + i + '"></td><td class="n"><button class="jump" id="tcm' + i + '" data-j="' + i + '" title="Поставить вагон в эту точку">…</button></td></tr>';
+    $('tab').innerHTML = h;
+    h = '<tr><th></th><th class="n">к кузову</th><th class="n">макс.</th></tr>';
+    for (i = 0; i < sp.bog.length; i++) {
+      b = sp.bog[i];
+      nm = (i + 1) + ' · ' + (b.t === 'R' ? '<b>неповоротная</b>' : 'поворотная') + (b.sec2 >= 0 ? ', под сочленением' : (b.t === 'R' ? ' (жёстко в секции)' : ''));
+      h += '<tr><td>' + nm + '</td><td class="n" id="tba' + i + '"></td><td class="n" id="tbm' + i + '"></td></tr>';
+    }
+    for (i = 0; i < sp.J.length; i++) h += '<tr><td>Сочленение ' + (i + 1) + '–' + (i + 2) + ', излом</td><td class="n" id="tja' + i + '"></td><td class="n" id="tjm' + i + '"></td></tr>';
+    $('tab2').innerHTML = h;
+    tabC = true;
+  }
+  function deg(v) { return f1(v) + '°'; }
+  function updateTables() {
+    var i, m, sp = spec, d = run && run.done, a = cur.A, el;
+    if (!tabC || !cur.P || !cur.P.ok) return;
+    for (i = 0; i < 5; i++) {
+      m = i < 4 ? cur.c[i] : cur.m;
+      $('tsw' + i).style.background = css(colArr(m.dl));
+      $('tcd' + i).innerHTML = mm(m.d);
+      $('tcl' + i).innerHTML = smm(i < 4 ? m.dl : Math.max(0, m.dl));
+      $('tcm' + i).innerHTML = d ? smm(i < 4 ? run.cMax[i] : run.vMax) + ' →' : '…';
+    }
+    for (i = 0; i < sp.bog.length; i++) {
+      if (sp.bog[i].t === 'R') { $('tba' + i).innerHTML = '0° (жёстко)'; $('tbm' + i).innerHTML = '—'; continue; }
+      $('tba' + i).innerHTML = deg(a.b[i]) + (a.b2[i] >= 0 ? ' / ' + deg(a.b2[i]) : '');
+      $('tbm' + i).innerHTML = d ? deg(run.bA[i]) : '…';
+    }
+    for (i = 0; i < sp.J.length; i++) { $('tja' + i).innerHTML = deg(a.j[i]); $('tjm' + i).innerHTML = d ? deg(run.jA[i]) : '…'; }
+    if (d) {
+      m = 0; for (i = 1; i < 4; i++) if (run.cMax[i] > run.cMax[m]) m = i;
+      el = 'На прямой от каждого угла до рельса ' + mm(spec.d0) + ' мм. Красный — наибольший вынос на этом пути: ' + smm(run.dmax) + ' мм' + (run.vMax > run.cMax[m] ? ' (середина кузова).' : ' (' + CNs[m] + ', до рельса ' + mm(spec.d0 + run.cMax[m]) + ' мм).');
+      m = 0; for (i = 1; i < 4; i++) if (run.cMin[i] < run.cMin[m]) m = i;
+      if (spec.d0 + run.cMin[m] < 0) el += ' Внутренний угол уходит за рельс внутрь колеи до ' + mm(-(spec.d0 + run.cMin[m])) + ' мм (' + CNs[m] + ').';
+      else if (run.cMin[m] < -0.005) el += ' Ближе всего к рельсу — ' + mm(spec.d0 + run.cMin[m]) + ' мм (' + CNs[m] + ').';
+      $('legnote').innerHTML = el;
+    } else $('legnote').innerHTML = 'Считаю максимумы…';
+  }
+  function buildTicks() {
+    var t = $('ticks'), w = slider.offsetWidth || 300, i, mf, mr, h = '', L = [], el, sp, left, wd, px, fr;
+    if (!run || !run.done) { t.innerHTML = ''; return; }
+    px = function (v) { return 13 + (w - 26) * clamp(v / run.len, 0, 1); };
+    mf = run.cMax[0] >= run.cMax[1] ? 0 : 1; mr = run.cMax[2] >= run.cMax[3] ? 2 : 3;
+    L.push({ v: run.evIn, t: 'вход в кривую', c: '' });
+    L.push({ v: run.evOut, t: 'выход из кривой', c: '' });
+    if (run.cMax[mf] > 0.005 && run.cMax[mr] > 0.005 && Math.abs(px(run.cArg[mf]) - px(run.cArg[mr])) < 80) {
+      fr = Math.min(run.cArg[mf], run.cArg[mr]);
+      L.push({ v: fr, t: 'макс. Вп и Вз', c: 'mx r2', v2: Math.max(run.cArg[mf], run.cArg[mr]) });
+    } else {
+      if (run.cMax[mf] > 0.005) L.push({ v: run.cArg[mf], t: 'макс. Вп', c: 'mx r2' });
+      if (run.cMax[mr] > 0.005) L.push({ v: run.cArg[mr], t: 'макс. Вз', c: 'mx r2' });
+    }
+    for (i = 0; i < L.length; i++) {
+      h += '<span data-v="' + L[i].v + '" class="' + L[i].c + '">' + L[i].t + '</span>';
+      if (L[i].v2 !== undefined) h += '<span data-v="' + L[i].v2 + '" class="mx r2 nl">&#8203;</span>';
+    }
+    t.innerHTML = h;
+    sp = t.getElementsByTagName('span');
+    for (i = 0; i < sp.length; i++) {
+      el = sp[i]; left = px(+el.getAttribute('data-v')); wd = el.offsetWidth;
+      if (left + wd > w) { left = left - wd; el.className += ' rt'; }
+      el.style.left = left + 'px';
+    }
+  }
+  function rebuild(refit) {
+    var frac = run ? pos / run.len : 0, car = CARS[carIdx], t = TRACKS[trackIdx];
+    spec = makeSpec(car.id, params[car.id]);
+    track = buildTrack(t.id, RAD, t.ins ? INS : 0, spec.L + 8);
+    run = new Run(spec, track);
+    NORM.max = 0.1; NORM.min = -0.1; makeBuckets();
+    cur.P = newPose(spec);
+    slider.max = String(Math.floor(run.len * 100) / 100);
+    buildTables(); carInfo(); trackInfo(); markCars(); markTracks();
+    $('ticks').innerHTML = '';
+    $('calc').style.display = 'block';
+    setPos(frac * run.len);
+    if (refit || !follow) {
+      if (CW < 700) { view.k = followK(); setFollow(true); } else fit();
+    }
+    need = true;
+  }
+  function runDone() {
+    NORM.max = run.dmax; NORM.min = run.dmin; makeBuckets();
+    $('calc').style.display = 'none';
+    buildTicks(); tabsDirty = true; need = true;
+  }
+  function saveState() {
+    store.set('car', carIdx); store.set('track', trackIdx); store.set('R', RAD); store.set('ins', INS);
+    store.set('lay', JSON.stringify(LAY)); store.set('params', JSON.stringify(params));
+  }
+
+  /* ================= картинка ================= */
+  function savePNG() {
+    var sc = Math.max(2, DPR), fh = 74, c = document.createElement('canvas'), x, pal = DARK ? PAL_D : PAL_L, car = CARS[carIdx], v = curVals(), cc = cur.c, name, a, isIOS, l1, l2, l3;
+    c.width = Math.round(CW * sc); c.height = Math.round((CH + fh) * sc);
+    x = c.getContext('2d'); x.setTransform(sc, 0, 0, sc, 0, 0);
+    if (follow && cur.P.ok) { a = vehCentre({}); view.cx = a.x; view.cy = a.y; }
+    render(x, CW, CH, view, pal, true);
+    x.fillStyle = pal.panel; x.fillRect(0, CH, CW, fh);
+    x.fillStyle = pal.panelLine; x.fillRect(0, CH, CW, 1);
+    l1 = car.name + ' · ' + TRACKS[trackIdx].name + ', R = ' + RAD + ' м' + (TRACKS[trackIdx].ins && INS > 0 ? ', вставка ' + num(INS) + ' м' : '') + ' · пройдено ' + f1(pos) + ' м';
+    l2 = 'До рельса, мм: маска ' + mm(cc[0].d) + ' / ' + mm(cc[1].d) + ', хвост ' + mm(cc[2].d) + ' / ' + mm(cc[3].d) + ' (лев. / прав.); на прямой ' + mm(spec.d0);
+    l3 = 'Вынос, мм: Вп ' + smm(v.vp) + ', Вз ' + smm(v.vz) + ', Вс ' + smm(v.vc) + (run.done ? ' · максимум на пути ' + smm(run.dmax) : '');
+    x.textAlign = 'left'; x.textBaseline = 'middle';
+    x.font = 'bold 13px ' + FONT; x.fillStyle = pal.ink; x.fillText(l1, 12, CH + 16);
+    x.font = '12px ' + FONT; x.fillText(l2, 12, CH + 37); x.fillText(l3, 12, CH + 57);
+    name = 'zahod_' + car.id + '_R' + RAD + '_' + pos.toFixed(1) + 'm.png';
+    a = document.createElement('a');
+    isIOS = /iP(ad|hone|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (!isIOS && typeof a.download !== 'undefined') {
+      if (c.toBlob && window.URL && window.URL.createObjectURL) {
+        c.toBlob(function (b) {
+          var u = window.URL.createObjectURL(b); a.href = u; a.download = name; document.body.appendChild(a); a.click();
+          setTimeout(function () { document.body.removeChild(a); window.URL.revokeObjectURL(u); }, 2000);
+        }, 'image/png');
+      } else { a.href = c.toDataURL('image/png'); a.download = name; document.body.appendChild(a); a.click(); document.body.removeChild(a); }
+    } else showShot(c.toDataURL('image/png'));
+  }
+  function showShot(url) {
+    var d = document.createElement('div');
+    d.className = 'shot';
+    d.innerHTML = '<button type="button">Закрыть</button><p>Нажми на картинку и подержи, чтобы сохранить её.</p><img alt="Снимок схемы" src="' + url + '">';
+    d.getElementsByTagName('button')[0].onclick = function () { document.body.removeChild(d); };
+    document.body.appendChild(d);
+  }
+
+  /* ================= события ================= */
+  function tl(e) { var r = cv.getBoundingClientRect(), a = [], i; for (i = 0; i < e.touches.length; i++) a.push({ x: e.touches[i].clientX - r.left, y: e.touches[i].clientY - r.top }); return a; }
+  function bind() {
+    var drag = null, tch = null, deb = null;
+    $('cars').addEventListener('click', function (e) {
+      var t = e.target; while (t && t !== this && t.tagName !== 'BUTTON') t = t.parentNode;
+      if (!t || t === this) return;
+      carIdx = +t.getAttribute('data-i'); buildDims(); saveState(); rebuild(true);
+    });
+    $('tracks').addEventListener('click', function (e) {
+      var t = e.target; if (t.tagName !== 'BUTTON') return;
+      trackIdx = +t.getAttribute('data-i'); saveState(); rebuild(true);
+    });
+    $('rad').addEventListener('input', function () {
+      RAD = +this.value; $('radv').innerHTML = RAD + ' м';
+      if (deb) clearTimeout(deb);
+      deb = setTimeout(function () { deb = null; saveState(); rebuild(false); }, 160);
+    });
+    $('rad').addEventListener('change', function () { if (deb) { clearTimeout(deb); deb = null; } RAD = +this.value; saveState(); rebuild(false); });
+    $('ins').addEventListener('input', function () {
+      INS = +this.value; $('insv').innerHTML = num(INS) + ' м';
+      if (deb) clearTimeout(deb);
+      deb = setTimeout(function () { deb = null; saveState(); rebuild(false); }, 160);
+    });
+    $('ins').addEventListener('change', function () { if (deb) { clearTimeout(deb); deb = null; } INS = +this.value; saveState(); rebuild(false); });
+    $('layers').addEventListener('change', function (e) {
+      var k = e.target.getAttribute('data-k'); if (!k) return;
+      LAY[k] = e.target.checked; saveState(); need = true;
+    });
+    $('dimsbtn').addEventListener('click', function () { var d = $('dims'); d.className = d.className.indexOf('open') < 0 ? 'dims open' : 'dims'; });
+    $('dims').addEventListener('change', function (e) {
+      var k = e.target.getAttribute('data-k'), car = CARS[carIdx], p = {}, q, err;
+      if (!k) return;
+      for (q in params[car.id]) if (params[car.id].hasOwnProperty(q)) p[q] = params[car.id][q];
+      p[k] = Math.round(+String(e.target.value).replace(',', '.'));
+      err = checkDims(car.id, p);
+      if (err) { $('dmerr').innerHTML = err; e.target.value = params[car.id][k]; return; }
+      $('dmerr').innerHTML = ''; params[car.id] = p; saveState(); rebuild(false);
+    });
+    $('dims').addEventListener('click', function (e) {
+      var car = CARS[carIdx], q, p = {};
+      if (e.target.id !== 'dmreset') return;
+      for (q in car.def) if (car.def.hasOwnProperty(q)) p[q] = car.def[q];
+      params[car.id] = p; buildDims(); saveState(); rebuild(false);
+    });
+    $('tab').addEventListener('click', function (e) {
+      var j = e.target.getAttribute('data-j');
+      if (j === null || !run || !run.done) return;
+      setPlaying(false); setPos(+j < 4 ? run.cArg[+j] : run.vArg);
+    });
+    $('ticks').addEventListener('click', function (e) {
+      var v = e.target.getAttribute('data-v'); if (v === null) return;
+      setPlaying(false); setPos(+v);
+    });
+    slider.addEventListener('input', function () { setPlaying(false); setPos(+this.value); });
+    slider.addEventListener('change', function () { setPos(+this.value); });
+    $('bplay').addEventListener('click', function () { if (!playing && pos >= run.len - 0.01) setPos(0); setPlaying(!playing); });
+    $('bm1').addEventListener('click', function () { setPlaying(false); setPos(pos - 1); });
+    $('bm01').addEventListener('click', function () { setPlaying(false); setPos(pos - 0.1); });
+    $('bp01').addEventListener('click', function () { setPlaying(false); setPos(pos + 0.1); });
+    $('bp1').addEventListener('click', function () { setPlaying(false); setPos(pos + 1); });
+    $('spd').addEventListener('change', function () { speed = +this.value; });
+    $('zin').addEventListener('click', function () { zoomAt(CW / 2, CH / 2, 1.4); });
+    $('zout').addEventListener('click', function () { zoomAt(CW / 2, CH / 2, 1 / 1.4); });
+    $('zfit').addEventListener('click', fit);
+    $('zfol').addEventListener('click', function () { setFollow(!follow); });
+    $('png').addEventListener('click', savePNG);
+    cv.addEventListener('mousedown', function (e) { if (e.button !== 0) return; drag = { x: e.clientX, y: e.clientY }; cv.className = 'drag'; e.preventDefault(); });
+    window.addEventListener('mousemove', function (e) { if (!drag) return; panBy(e.clientX - drag.x, e.clientY - drag.y); drag.x = e.clientX; drag.y = e.clientY; });
+    window.addEventListener('mouseup', function () { drag = null; cv.className = ''; });
+    cv.addEventListener('wheel', function (e) {
+      var r = cv.getBoundingClientRect(), dy = e.deltaY * (e.deltaMode === 1 ? 33 : (e.deltaMode === 2 ? 400 : 1));
+      e.preventDefault(); zoomAt(e.clientX - r.left, e.clientY - r.top, Math.exp(-dy * 0.0016));
+    });
+    cv.addEventListener('touchstart', function (e) { tch = tl(e); e.preventDefault(); });
+    cv.addEventListener('touchmove', function (e) {
+      var t = tl(e), d0, d1, m0x, m0y, m1x, m1y;
+      e.preventDefault();
+      if (!tch) { tch = t; return; }
+      if (t.length === 1 && tch.length === 1) panBy(t[0].x - tch[0].x, t[0].y - tch[0].y);
+      else if (t.length >= 2 && tch.length >= 2) {
+        d0 = hyp(tch[0].x - tch[1].x, tch[0].y - tch[1].y); d1 = hyp(t[0].x - t[1].x, t[0].y - t[1].y);
+        m0x = (tch[0].x + tch[1].x) / 2; m0y = (tch[0].y + tch[1].y) / 2; m1x = (t[0].x + t[1].x) / 2; m1y = (t[0].y + t[1].y) / 2;
+        if (d0 > 10) { if (follow) setFollow(false); zoomAt(m0x, m0y, d1 / d0); }
+        panBy(m1x - m0x, m1y - m0y);
+      }
+      tch = t;
+    });
+    cv.addEventListener('touchend', function (e) { tch = tl(e); });
+    document.addEventListener('keydown', function (e) {
+      var t = e.target, tag = t && t.tagName, st = e.shiftKey ? 1 : 0.1;
+      if ((tag === 'INPUT' && t.type !== 'range' && t.type !== 'checkbox') || tag === 'SELECT' || tag === 'TEXTAREA') return;
+      if (tag === 'INPUT' && t.type === 'range') return;
+      if (e.keyCode === 37) { setPlaying(false); setPos(pos - st); e.preventDefault(); }
+      else if (e.keyCode === 39) { setPlaying(false); setPos(pos + st); e.preventDefault(); }
+      else if (e.keyCode === 32 && tag !== 'BUTTON') { if (!playing && pos >= run.len - 0.01) setPos(0); setPlaying(!playing); e.preventDefault(); }
+    });
+    window.addEventListener('resize', function () { sizeCanvas(); buildTicks(); });
+    window.addEventListener('orientationchange', function () { setTimeout(function () { sizeCanvas(); buildTicks(); }, 250); });
+    if (mq && mq.addListener) mq.addListener(function () { readTheme(); need = true; });
+  }
+
+  /* ================= цикл ================= */
+  var raf = window.requestAnimationFrame || window.webkitRequestAnimationFrame || function (f) { return setTimeout(function () { f(now()); }, 16); };
+  var lastT = now(), tabT = 0;
+  function frame() {
+    var t = now(), dt = Math.min(0.1, (t - lastT) / 1000);
+    lastT = t;
+    if (playing && run) { setPos(pos + speed * dt, true); if (pos >= run.len) setPlaying(false); }
+    if (run && !run.done) { if (run.work(12)) runDone(); need = true; }
+    if (need) { draw(); need = false; }
+    if (tabsDirty && (!playing || t - tabT > 150)) { updateTables(); tabsDirty = false; tabT = t; }
+    raf(frame);
+  }
+
+  /* ================= запуск ================= */
+  function init() {
+    var i, v, p, k, sp;
+    readTheme();
+    for (i = 0; i < LAYDEF.length; i++) LAY[LAYDEF[i][0]] = !!LAYDEF[i][2];
+    v = jget('lay'); if (v) for (k in v) if (v.hasOwnProperty(k) && LAY.hasOwnProperty(k)) LAY[k] = !!v[k];
+    sp = jget('params') || {};
+    for (i = 0; i < CARS.length; i++) {
+      p = {};
+      for (k in CARS[i].def) if (CARS[i].def.hasOwnProperty(k)) p[k] = (sp[CARS[i].id] && sp[CARS[i].id][k] > 0) ? sp[CARS[i].id][k] : CARS[i].def[k];
+      if (checkDims(CARS[i].id, p)) p = JSON.parse(JSON.stringify(CARS[i].def));
+      params[CARS[i].id] = p;
+    }
+    v = store.get('car'); if (v !== null && +v >= 0 && +v < CARS.length) carIdx = +v;
+    v = store.get('track'); if (v !== null && +v >= 0 && +v < TRACKS.length) trackIdx = +v;
+    v = store.get('R'); if (v !== null && +v >= 14 && +v <= 60) RAD = +v;
+    v = store.get('ins'); if (v !== null && +v >= 0 && +v <= 20) INS = +v;
+    $('rad').value = String(RAD); $('radv').innerHTML = RAD + ' м';
+    $('ins').value = String(INS); $('insv').innerHTML = num(INS) + ' м';
+    buildCars(); buildTracks(); buildLayers(); buildDims(); setPlaying(false);
+    bind();
+    sizeCanvas();
+    rebuild(true);
+    raf(frame);
+  }
+  window.TRAM = {
+    get: function () { return { pos: pos, run: run, cur: cur, spec: spec, track: track, view: view }; },
+    setPos: setPos,
+    setCar: function (i) { carIdx = i; buildDims(); rebuild(true); },
+    setTrack: function (i) { trackIdx = i; rebuild(true); },
+    setR: function (r) { RAD = r; $('rad').value = String(r); $('radv').innerHTML = r + ' м'; rebuild(false); },
+    setIns: function (v) { INS = v; $('ins').value = String(v); $('insv').innerHTML = num(v) + ' м'; rebuild(false); },
+    finish: function () { while (run && !run.done) { if (run.work(1e9)) runDone(); } need = true; draw(); updateTables(); },
+    follow: function (on, k) { setFollow(on); if (k) view.k = k; need = true; draw(); },
+    lib: { solve: solve, makeSpec: makeSpec, buildTrack: buildTrack, newPose: newPose, measCorner: measCorner, measMid: measMid, Run: Run }
+  };
+  init();
+})();
+</script>
+</body>
+</html>
