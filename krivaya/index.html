@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Заход трамвая в кривую</title>
-<meta name="description" content="Эмулятор захода трамвая в кривую: ЛМ-68М, ЛВС-86, Богатырь-М, Витязь-М. Расстояния от углов маски и хвоста до рельса, вынос концов и середины кузова, поворотные и неповоротные тележки, габаритная полоса.">
+<meta name="description" content="Эмулятор захода трамвая в кривую: ЛМ-68М, КТМ-5, ЛВС-86, Богатырь-М, Витязь-М. Расстояния от углов маски и хвоста до рельса, вынос концов и середины кузова, поворотные и неповоротные тележки, габаритная полоса.">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="ru_RU">
 <meta property="og:title" content="Заход трамвая в кривую">
-<meta property="og:description" content="Вынос углов маски и хвоста, середины кузова и габаритная полоса для ЛМ-68М, ЛВС-86, Богатыря-М и Витязя-М на кривых разного радиуса.">
+<meta property="og:description" content="Вынос углов маски и хвоста, середины кузова и габаритная полоса для ЛМ-68М, КТМ-5, ЛВС-86, Богатыря-М и Витязя-М на кривых разного радиуса.">
 <style>
 html,body{margin:0;padding:0}
 body{background:#f3f1ea;color:#1d2430;font:14px/1.45 -apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-text-size-adjust:100%}
@@ -354,6 +354,9 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
     { id: 'lm68', name: 'ЛМ-68М', sub: 'одновагонный · 2 поворотные тележки', col: '#c8423b',
       def: { L: 15000, b: 7500, W: 2550, a: 1940 },
       f: [['L', 'Длина кузова'], ['b', 'База (шкворень — шкворень)'], ['W', 'Ширина кузова'], ['a', 'База тележки']] },
+    { id: 'ktm5', name: 'КТМ-5 (71-605)', sub: 'одновагонный · 2 поворотные тележки', col: '#8457b3',
+      def: { L: 15000, b: 7500, W: 2600, a: 1940 },
+      f: [['L', 'Длина кузова'], ['b', 'База (шкворень — шкворень)'], ['W', 'Ширина кузова'], ['a', 'База тележки']] },
     { id: 'lvs86', name: 'ЛВС-86', sub: '2 секции · 3 поворотные тележки, средняя под сочленением', col: '#d9822b',
       def: { Ls: 11250, oh: 3750, W: 2550, a: 1940 },
       f: [['Ls', 'Длина секции'], ['oh', 'Свес (торец — шкворень)'], ['W', 'Ширина кузова'], ['a', 'База тележки']] },
@@ -366,6 +369,7 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
   ];
   function carNote(id, p) {
     if (id === 'lm68') return 'База ' + grp(p.b) + ', свесы по ' + grp(Math.round((p.L - p.b) / 2)) + ' мм. Ширина по паспорту 2 550 (в задании округлено до 2,6 м).';
+    if (id === 'ktm5') return 'База ' + grp(p.b) + ', свесы по ' + grp(Math.round((p.L - p.b) / 2)) + ' мм. Ширина по обшивке 2 600 (габаритная 2 650; в Википедии указано 2 550).';
     if (id === 'lvs86') return 'Две секции по ' + grp(p.Ls) + ' мм. Средняя тележка — под сочленением, до крайних по ' + grp(p.Ls - p.oh) + ' мм.';
     if (id === 'bog') return 'Свес ' + grp(p.oh) + ', от шкворня до сочленения ' + grp(p.pj) + ', неповоротная тележка в ' + grp(p.jr) + ' за сочленением, задний свес ' + grp(p.rh) + ' (оценка). Схемы Довлатова нет — показан Богатырь-М.';
     return 'Крайние секции по ' + grp(p.oh + p.pj) + ', средняя ' + grp(p.mid) + ' мм, неповоротная тележка в её середине. База ' + grp(Math.round(p.pj + p.mid / 2)) + ' мм. У Достоевского длина около 26 950 — показан Витязь-М.';
@@ -375,7 +379,7 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
     for (k in p) if (p.hasOwnProperty(k)) { if (!(p[k] > 0) || !isFinite(p[k])) return 'Размеры должны быть положительными числами.'; if (p[k] > 40000) return 'Слишком большой размер.'; }
     if (p.W < 1800 || p.W > 3400) return 'Ширина — от 1 800 до 3 400 мм.';
     if (p.a < 800 || p.a > 3500) return 'База тележки — от 800 до 3 500 мм.';
-    if (id === 'lm68') { if (p.b >= p.L) return 'База должна быть меньше длины.'; if (p.b < p.a + 1000) return 'База слишком мала.'; }
+    if (id === 'lm68' || id === 'ktm5') { if (p.b >= p.L) return 'База должна быть меньше длины.'; if (p.b < p.a + 1000) return 'База слишком мала.'; }
     if (id === 'lvs86') { if (p.oh >= p.Ls) return 'Свес должен быть меньше длины секции.'; if (p.Ls - p.oh < p.a + 1000) return 'Слишком маленькое расстояние между тележками.'; }
     if (id === 'bog' || id === 'vit') { if (p.pj < p.a) return 'Шкворень слишком близко к сочленению.'; }
     if (id === 'bog' && p.jr < p.a / 2) return 'Неповоротная тележка слишком близко к сочленению.';
@@ -384,7 +388,7 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
   }
   function makeSpec(id, p) {
     var m = 0.001, sp = { id: id, W: p.W * m, a: p.a * m, J: [], bog: [], secs: [] }, o, j1, j2, k, n, i, b, xa, xb;
-    if (id === 'lm68') {
+    if (id === 'lm68' || id === 'ktm5') {
       sp.L = p.L * m; o = (p.L - p.b) / 2 * m;
       sp.bog = [{ x: o, t: 'P' }, { x: sp.L - o, t: 'P' }];
     } else if (id === 'lvs86') {
@@ -1202,7 +1206,7 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
     buildTicks(); tabsDirty = true; need = true;
   }
   function saveState() {
-    store.set('car', carIdx); store.set('track', trackIdx); store.set('R', RAD); store.set('ins', INS);
+    store.set('carId', CARS[carIdx].id); store.set('track', trackIdx); store.set('R', RAD); store.set('ins', INS);
     store.set('lay', JSON.stringify(LAY)); store.set('params', JSON.stringify(params));
   }
 
@@ -1369,7 +1373,7 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
       if (checkDims(CARS[i].id, p)) p = JSON.parse(JSON.stringify(CARS[i].def));
       params[CARS[i].id] = p;
     }
-    v = store.get('car'); if (v !== null && +v >= 0 && +v < CARS.length) carIdx = +v;
+    v = store.get('carId'); for (i = 0; i < CARS.length; i++) if (CARS[i].id === v) carIdx = i;
     v = store.get('track'); if (v !== null && +v >= 0 && +v < TRACKS.length) trackIdx = +v;
     v = store.get('R'); if (v !== null && +v >= 14 && +v <= 60) RAD = +v;
     v = store.get('ins'); if (v !== null && +v >= 0 && +v <= 20) INS = +v;
