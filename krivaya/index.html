@@ -144,11 +144,11 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
         <button id="bplay" class="play"></button>
         <button id="bp01" title="Вперёд на 0,1 м">+0,1</button>
         <button id="bp1" title="Вперёд на 1 м">+1 м</button>
-        <select id="spd" title="Скорость движения">
-          <option value="0.7">2,5 км/ч</option>
-          <option value="1.4">5 км/ч</option>
-          <option value="2.8" selected>10 км/ч</option>
-          <option value="5.6">20 км/ч</option>
+        <select id="spd" title="Скорость движения — не выше нормы для этой кривой">
+          <option value="0.6944">2,5 км/ч</option>
+          <option value="1.3889">5 км/ч</option>
+          <option value="2.7778" selected>10 км/ч</option>
+          <option value="4.1667">15 км/ч</option>
         </select>
         <span class="posv" id="posv">0,0 м</span>
       </div>
@@ -169,6 +169,7 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
       <h2>Путь</h2>
       <div class="seg" id="tracks"></div>
       <div class="row"><label for="rad">Радиус кривой <b id="radv">25 м</b></label><input type="range" id="rad" min="14" max="60" step="1" value="25"></div>
+      <div class="note" id="spdnote" style="margin-bottom:10px"></div>
       <div class="row" id="insrow"><label for="ins">Прямая вставка между кривыми <b id="insv">0 м</b></label><input type="range" id="ins" min="0" max="20" step="0.5" value="0"></div>
       <div class="note" id="trackinfo"></div>
     </div>
@@ -787,7 +788,27 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
   function readTheme() { DARK = !!(mq && mq.matches); }
 
   /* ================= состояние ================= */
-  var carIdx = 0, trackIdx = 0, RAD = 25, INS = 0, pos = 0, playing = false, speed = 2.8, follow = false, CHAMF = true;
+  var carIdx = 0, trackIdx = 0, RAD = 25, INS = 0, pos = 0, playing = false, speed = 10 / 3.6, follow = false, CHAMF = true;
+
+  /* Скорость проезда кривой без знаков — ОДТ, ДИ водителя трамвая, прил. 9:
+     радиус до 50 м — 15 км/ч, 50–75 м — 20, 75–100 м — 25, больше 100 м — 30.
+     В списке скоростей — только то, что разрешено для текущего радиуса. */
+  var SPEEDS = [2.5, 5, 10, 15, 20, 25, 30];
+  function curveLimit(r) { return r <= 50 ? 15 : r <= 75 ? 20 : r <= 100 ? 25 : 30; }
+  function fillSpeeds() {
+    var lim = curveLimit(RAD), sel = $('spd'), cur = speed * 3.6, best = 0, i, o;
+    while (sel.firstChild) sel.removeChild(sel.firstChild);
+    for (i = 0; i < SPEEDS.length && SPEEDS[i] <= lim; i++) {
+      o = document.createElement('option');
+      o.value = String(SPEEDS[i] / 3.6);
+      o.appendChild(document.createTextNode(String(SPEEDS[i]).replace('.', ',') + ' км/ч'));
+      sel.appendChild(o);
+      if (SPEEDS[i] <= cur + 1e-6) best = i;
+    }
+    sel.selectedIndex = best; speed = SPEEDS[best] / 3.6;
+    $('spdnote').innerHTML = 'Кривая R&nbsp;' + RAD + '&nbsp;м — не быстрее <b>' + lim + '&nbsp;км/ч</b>. ' +
+      'Без знаков: радиус до 50&nbsp;м — 15&nbsp;км/ч, от 50 до 75&nbsp;м — 20&nbsp;км/ч (ОДТ, ДИ водителя, прил.&nbsp;9). Быстрее в списке скоростей нет.';
+  }
   var params = {}, spec = null, track = null, run = null, need = true, tabsDirty = true;
   var cur = { P: null, c: [{}, {}, {}, {}], m: {}, A: {}, jn: [] };
   var LAYDEF = [['lines', 'Линии от углов до рельса', 1], ['labels', 'Подписи расстояний', 1], ['mid', 'Вынос середины (Вс)', 1], ['joints', 'Расстояния у сочленений', 1], ['env', 'Габаритная полоса всего пути', 1], ['trace', 'Следы углов', 1], ['glass', 'Прозрачный кузов (видно тележки)', 1], ['sleep', 'Шпалы', 1], ['axes', 'Оси секций и хорды тележек', 0], ['panel', 'Табличка с цифрами на схеме', 1]];
@@ -1384,11 +1405,11 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
       trackIdx = +t.getAttribute('data-i'); saveState(); rebuild(true);
     });
     $('rad').addEventListener('input', function () {
-      RAD = +this.value; $('radv').innerHTML = RAD + ' м';
+      RAD = +this.value; $('radv').innerHTML = RAD + ' м'; fillSpeeds();
       if (deb) clearTimeout(deb);
       deb = setTimeout(function () { deb = null; saveState(); rebuild(false); }, 160);
     });
-    $('rad').addEventListener('change', function () { if (deb) { clearTimeout(deb); deb = null; } RAD = +this.value; saveState(); rebuild(false); });
+    $('rad').addEventListener('change', function () { if (deb) { clearTimeout(deb); deb = null; } RAD = +this.value; fillSpeeds(); saveState(); rebuild(false); });
     $('ins').addEventListener('input', function () {
       INS = +this.value; $('insv').innerHTML = num(INS) + ' м';
       if (deb) clearTimeout(deb);
@@ -1505,7 +1526,7 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
     v = store.get('track'); if (v !== null && +v >= 0 && +v < TRACKS.length) trackIdx = +v;
     v = store.get('R'); if (v !== null && +v >= 14 && +v <= 60) RAD = +v;
     v = store.get('ins'); if (v !== null && +v >= 0 && +v <= 20) INS = +v;
-    $('rad').value = String(RAD); $('radv').innerHTML = RAD + ' м';
+    $('rad').value = String(RAD); $('radv').innerHTML = RAD + ' м'; fillSpeeds();
     $('ins').value = String(INS); $('insv').innerHTML = num(INS) + ' м';
     buildCars(); buildTracks(); buildLayers(); buildDims(); setPlaying(false);
     bind();
@@ -1514,12 +1535,12 @@ input[type=range]::-webkit-slider-thumb{background:#e4e8ee;border-color:#12161d}
     raf(frame);
   }
   window.TRAM = {
-    get: function () { return { pos: pos, run: run, cur: cur, spec: spec, track: track, view: view }; },
+    get: function () { return { pos: pos, run: run, cur: cur, spec: spec, track: track, view: view, speed: speed }; },
     setPos: setPos,
     setCar: function (i) { carIdx = i; buildDims(); rebuild(true); },
     chamf: function (on) { CHAMF = on; $('chamf').checked = on; rebuild(false); },
     setTrack: function (i) { trackIdx = i; rebuild(true); },
-    setR: function (r) { RAD = r; $('rad').value = String(r); $('radv').innerHTML = r + ' м'; rebuild(false); },
+    setR: function (r) { RAD = r; $('rad').value = String(r); $('radv').innerHTML = r + ' м'; fillSpeeds(); rebuild(false); },
     setIns: function (v) { INS = v; $('ins').value = String(v); $('insv').innerHTML = num(v) + ' м'; rebuild(false); },
     finish: function () { while (run && !run.done) { if (run.work(1e9)) runDone(); } need = true; draw(); updateTables(); },
     follow: function (on, k) { setFollow(on); if (k) view.k = k; need = true; draw(); },
